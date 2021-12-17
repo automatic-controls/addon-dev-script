@@ -2,7 +2,7 @@
 
 [This script](Utility.bat) may be used to automate certain aspects of *WebCTRL* add-on development on *Windows* operating systems. *WebCTRL SDK* dependencies are automatically collected from a local *WebCTRL* installation. Commands are provided for add-on compilation and packaging. Keystore management is automatic, so you don't have to worry about manually signing your *.addon* file.
 
-## Setup Installation
+## Setup Instructions
 
 1. Install *WebCTRL7.0* or later.
 
