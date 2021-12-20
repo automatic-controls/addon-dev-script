@@ -206,12 +206,12 @@ if not exist "%certFile%" (
 
 :: List of valid workspace commands
 set "commands[1]=help"
-set "commands[2]=clean"
-set "commands[3]=build"
-set "commands[4]=pack"
-set "commands[5]=make"
-set "commands[6]=sign"
-set "commands[7]=forge"
+set "commands[2]=build"
+set "commands[3]=pack"
+set "commands[4]=make"
+set "commands[5]=sign"
+set "commands[6]=forge"
+set "commands[7]=deploy"
 set "commands=7"
 
 :: Retrieve workspace root from parameter
@@ -238,59 +238,112 @@ goto :globalMenu
   echo help   -  displays this message
   echo cls    -  clears the terminal
   echo new    -  create a new project
-  echo clean  -  deletes all .class files
-  echo build  -  calls clean and compiles .java files
+  echo build  -  compiles .java files
   echo pack   -  packages files into .addon archive
   echo make   -  calls build and pack
   echo sign   -  signs the addon
   echo forge  -  calls make and sign
+  echo deploy -  copies the addon to WebCTRL
   echo.
   echo Commands starting with the phrase 'git' are executed literally.
   echo.
+exit /b
+
+:deploy
+  copy /y "%addonFile%" "%WebCTRL%\addons\!name!.addon" >nul
+  copy /y "%certFile%" "%WebCTRL%\addons\Authenticator.cer" >nul
 exit /b
 
 :sign
   "%JDKBin%\jarsigner.exe" -keystore "%keystore%" -storepass "!pass!" "%addonFile%" %alias% >nul
 exit /b
 
-::parameteres passed to make
 :forge
-  call :make %*
+  call :make
   call :sign
 exit /b
 
-::parameters passed to build
 :make
-  call :build %*
+  call :build
   call :pack
 exit /b
 
+:: Pack files into .addon archive
 :pack
-  "%JDKBin%\jar.exe" -c -M -f "%addonFile%" -C "%root%\." info.xml -C "%root%\." webapp
+  rmdir /Q /S "%classes%" >nul 2>nul
+  for /D %%i in ("%trackingClasses%\*") do robocopy /E "%%~fi" "%classes%" >nul 2>nul
+  "%JDKBin%\jar.exe" -c -M -f "%addonFile%" -C "%root%" info.xml -C "%root%" webapp -C "%root%" LICENSE
 exit /b
 
-:: optional parameter to clean a subdirectory tree
-:clean
-  if exist "%classes%\%*\*" (
-    rmdir /Q /S "%classes%\%*" 2>nul
-  )
-exit /b
-
-::optional parameter to build only a specified file or subdirectory tree
-::omit file extensions
+:: Compile source code
 :build
-  call :clean %*
   setlocal
-    if exist "%src%\%*\*" (
-      set "param=%src%\%*"
-      set "match=*.java"
-    ) else if exist "%src%\%*.java" (
-      set "param=%src%\%*.java"
-      set "match=."
+    set "trackingRecord=%trackingClasses%\index.txt"
+    set "changes=0"
+    set /a index=0
+    echo Indexing files...
+    for /f "tokens=1,* delims==" %%i in ('echo foreach ^($a in ^(Get-ChildItem -Path "%src%" -Recurse -Include *.java^)^){Echo ^($a.LastWriteTime.toString^(^)+"="+$a.FullName^)} ^| PowerShell -Command -') do (
+      set /a index+=1
+      set "time[!index!]=%%i"
+      set "file[!index!]=%%j"
+      set "process[!index!]=0"
     )
-    for /r "%param%" %%i in (%match%) do (
-      "%JDKBin%\javac.exe" --release 8 -implicit:none -d "%classes%" -cp "%globalLib%\*;%lib%\*" "%%~fi"
+    set /a newIndex=0
+    if exist "%trackingRecord%" (
+      for /f "usebackq tokens=1,2,* delims==" %%i in ("%trackingRecord%") do (
+        set exists=0
+        for /l %%a in (1,1,%index%) do (
+          if !exists! EQU 0 if "!file[%%a]!" EQU "%%k" (
+            set exists=1
+            set "process[%%a]=1"
+            set /a newIndex+=1
+            set "newTime[!newIndex!]=!time[%%a]!"
+            set "newFile[!newIndex!]=%%k"
+            if "%%j" EQU "!time[%%a]!" (
+              if "%%i" NEQ "!newIndex!" rename "%trackingClasses%\%%i" !newIndex!
+            ) else (
+              echo Compiling: %%k
+              set "changes=1"
+              rmdir /S /Q "%trackingClasses%\%%i" >nul 2>nul
+              mkdir "%trackingClasses%\!newIndex!"
+              "%JDKBin%\javac.exe" --release 8 -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*" "%%k"
+              if !ERRORLEVEL! NEQ 0 (
+                rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
+                set /a newIndex-=1
+              )
+            )
+          )
+        )
+        if !exists! EQU 0 (
+          set "changes=1"
+          echo Removed: %%k
+          rmdir /S /Q "%trackingClasses%\%%i" >nul 2>nul
+        )
+      )
+    ) else (
+      rmdir /S /Q "%trackingClasses%" >nul 2>nul
+      mkdir "%trackingClasses%"
     )
+    for /l %%i in (1,1,%index%) do (
+      if "!process[%%i]!" EQU "0" (
+        echo Compiling: !file[%%i]!
+        set "changes=1"
+        set /a newIndex+=1
+        set "newTime[!newIndex!]=!time[%%i]!"
+        set "newFile[!newIndex!]=!file[%%i]!"
+        if exist "%trackingClasses%\!newIndex!" rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
+        mkdir "%trackingClasses%\!newIndex!"
+        "%JDKBin%\javac.exe" --release 8 -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*" "!file[%%i]!"
+        if !ERRORLEVEL! NEQ 0 (
+          rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
+          set /a newIndex-=1
+        )
+      )
+    )
+    (
+      for /L %%i in (1,1,!newIndex!) do echo %%i=!newTime[%%i]!=!newFile[%%i]!
+    ) > "%trackingRecord%"
+    if "!changes!" EQU "0" echo No source code changes detected.
   endlocal
 exit /b
 
@@ -376,6 +429,7 @@ exit /b
   if not exist "%src%" mkdir "%src%"
 
   :: Compiled classes
+  set "trackingClasses=%root%\classes"
   set "classes=%root%\webapp\WEB-INF\classes"
   if not exist "%classes%" mkdir "%classes%"
 
@@ -466,6 +520,7 @@ exit /b
   if not exist "%root%\.gitignore" (
     echo .vscode
     echo Utility.bat
+    echo classes
     echo webapp/WEB-INF/classes
     echo webapp/WEB-INF/lib
     echo **/*.addon
