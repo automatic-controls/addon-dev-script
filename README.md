@@ -36,23 +36,50 @@
 
      - Newly created project folders are placed alongside your local clone of this repository, but they can be moved anywhere after creation.
 
+     - You can initialize preexisting project folders. For example, you could clone a remote repository to your local machine, and then initialize it with the script to generate missing files.
+
+1. Review documentation on [*ALCshare*](http://alcshare.com/content/add-ons).
+
 ## Generated Project Structure
 
-<!-- explain the purpose of each file in a generated project -->
+| File | Description |
+| - | - |
+| *./.vscode/settings.json* | Tells *Visual Studio Code* where dependencies are located. |
+| *./.gitignore* | Tells *Git* what to ignore when committing files. |
+| *./Utility.bat* | Script to automate builds. |
+| *./LICENSE* | License file which is packaged into the *.addon* archive. |
+| *./README.md* | User-friendly information about the project. |
+| *./info.xml* | Communicates basic information to *WebCTRL*. |
+| *./src* | Contains all source code. |
+| *./classes* | Contains and indexes compiled *.class* files. |
+| *./classes/index.txt* | Records last modified timestamps for source code to avoid unnecessary recompilation. |
+| *./webapp* | Static resources (e.g, files and folders including *html*, *css*, *js*, *jsp*, and *png*). |
+| *./webapp/WEB-INF/web.xml* | Deployment descriptor (e.g, servlet, filter, and listener mappings). |
+| *./webapp/WEB-INF/classes* | Contains compiled *.class* files. |
+| *./webapp/WEB-INF/lib* | Contains dependencies which should be packaged into the *.addon* archive. |
 
 ## Command Reference
 
-The following commands may be used to automate add-on compilation and packaging. Notably, the *forge* command executes every step at once.
+The following commands may be used to automate add-on compilation and packaging.
 
 | Command | Description |
 | - | - |
-| ** |  |
-<!-- TODO -->
+| `help` | Displays a help message listing these commands with brief descriptions. |
+| `cls` | Clears the terminal. |
+| `new` | Exits the current context and prompts you to initialize a new project. |
+| `build` | Compiles source code. The last modified timestamp for each *.java* file is recorded to avoid unnecessary recompilation. |
+| `pack` | Packages all relevant files into a newly created *.addon* archive. |
+| `make` | Calls `build` and `pack`. |
+| `sign` | Signs the *.addon* file. |
+| `forge` | Calls `make` and `sign`. |
+| `deploy` | Copies the *.addon* archive and authenticator certificate to the bound *WebCTRL* installation. |
+| `git [args]` | All [*Git*](https://git-scm.com/) commands are executed literally. |
 
-## Deployment Instructions
+## Manual Deployment
 
-1. 
-<!-- use WebCTRL interface to install the addon after placing Authenticator.cer (renamed) into the addons directory -->
+1. Place *./Authenticator.cer* into the *./addons* directory of the target *WebCTRL* installation. Feel free to rename the certificate.
+
+1. Use the *WebCTRL* interface to install the *.addon* archive of your project.
 
 ## Dependency Collection
 
@@ -72,4 +99,6 @@ If you change the *WebCTRL* installation by manually editing *./config.txt* (rel
 
 ## Keystore Management
 
-<!-- explain how one could use a pre-existing keystore if needed, also explain how the keystore password is stored -->
+The generated 2048-bit RSA key-pair is valid for 100 years, uses SHA512 as the signature algorithm, and is stored under the alias *addon_dev* in *./keystore.jks*. You can also use a pre-existing key-pair under the same alias. An obfuscation of the keystore password is stored in *./config.txt*. The obfuscation algorithm reverses the ordering and XORs each character code with 4. **THE KEYSTORE PASSWORD IS NOT ENCRYPTED; IT IS ONLY OBFUSCATED**.
+
+**Remark:** *WebCTRL* uses the same obfuscation algorithm in a few places I've found. Anyone can inspect the *JavaScript* in a *WebCTRL* login page to discover that operator passwords are obfuscated in this way before being sent to the server. The *webserver.keystorepassword* entry from *./resources/properties/settings.properties* (relative to *WebCTRL*) is also obfuscated using the same algorithm.
