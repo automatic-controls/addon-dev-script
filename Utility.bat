@@ -46,6 +46,9 @@ setlocal EnableDelayedExpansion
 
 echo Initializing...
 
+:: Default compilation arguments
+set "compileArgs=--release 11"
+
 :: Global settings folder
 call :normalizePath settings "%~dp0."
 
@@ -214,9 +217,9 @@ set "commands[6]=forge"
 set "commands[7]=deploy"
 set "commands=7"
 
-:: Retrieve workspace root from parameter
+:: Retrieve workspace from parameter
 if "%*" NEQ "" (
-  call :normalizePath root "%*."
+  call :normalizePath workspace "%*."
   goto :initWorkspace
 )
 
@@ -226,9 +229,9 @@ if "%*" NEQ "" (
   echo WebCTRL Add-on Project Initializer v%version%
   echo.
   echo Enter the folder name of the project to initialize.
-  set /p "root=>"
-  if "!root!" NEQ "" (
-    call :normalizePath root "%settings%\..\!root!"
+  set /p "workspace=>"
+  if "!workspace!" NEQ "" (
+    call :normalizePath workspace "%settings%\..\!workspace!"
     goto :initWorkspace
   )
 goto :globalMenu
@@ -259,12 +262,12 @@ exit /b
 exit /b
 
 :forge
-  call :make
+  call :make %*
   call :sign
 exit /b
 
 :make
-  call :build
+  call :build %*
   call :pack
 exit /b
 
@@ -272,11 +275,20 @@ exit /b
 :pack
   rmdir /Q /S "%classes%" >nul 2>nul
   for /D %%i in ("%trackingClasses%\*") do robocopy /E "%%~fi" "%classes%" >nul 2>nul
-  "%JDKBin%\jar.exe" -c -M -f "%addonFile%" -C "%root%" info.xml -C "%root%" webapp -C "%root%" LICENSE
+  robocopy /E "%src%" "%classes%" /XF "*.java" >nul 2>nul
+  copy /Y "%workspace%\LICENSE" "%root%\LICENSE" >nul 2>nul
+  "%JDKBin%\jar.exe" -c -M -f "%addonFile%" -C "%root%" .
 exit /b
 
 :: Compile source code
 :build
+  if "%*" NEQ "" (
+    set "compileArgs=%*"
+    (
+      echo !compileArgs!
+    ) > "%workspaceConfig%"
+    rmdir /S /Q "%trackingClasses%" >nul 2>nul
+  )
   setlocal
     set "trackingRecord=%trackingClasses%\index.txt"
     set "changes=0"
@@ -306,7 +318,7 @@ exit /b
               set "changes=1"
               rmdir /S /Q "%trackingClasses%\%%i" >nul 2>nul
               mkdir "%trackingClasses%\!newIndex!"
-              "%JDKBin%\javac.exe" --release 8 -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*" "%%k"
+              "%JDKBin%\javac.exe" !compileArgs! -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*" "%%k"
               if !ERRORLEVEL! NEQ 0 (
                 rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
                 set /a newIndex-=1
@@ -333,7 +345,7 @@ exit /b
         set "newFile[!newIndex!]=!file[%%i]!"
         if exist "%trackingClasses%\!newIndex!" rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
         mkdir "%trackingClasses%\!newIndex!"
-        "%JDKBin%\javac.exe" --release 8 -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*" "!file[%%i]!"
+        "%JDKBin%\javac.exe" !compileArgs! -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*" "!file[%%i]!"
         if !ERRORLEVEL! NEQ 0 (
           rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
           set /a newIndex-=1
@@ -400,12 +412,14 @@ exit /b
 
 :initWorkspace
   echo.
+  if not exist "%workspace%" mkdir "%workspace%"
+  cd "%workspace%"
+  set "root=%workspace%\root"
   if not exist "%root%" mkdir "%root%"
-  cd "%root%"
 
   :: Create local launcher within workspace
   setlocal
-    set "batch=%root%\Utility.bat"
+    set "batch=%workspace%\Utility.bat"
     set "create=1"
     if exist "%batch%" (
       for /f "tokens=* delims=" %%i in ('call "%batch%" --version') do (
@@ -425,11 +439,11 @@ exit /b
   endlocal
 
   :: Source code
-  set "src=%root%\src"
+  set "src=%workspace%\src"
   if not exist "%src%" mkdir "%src%"
 
   :: Compiled classes
-  set "trackingClasses=%root%\classes"
+  set "trackingClasses=%workspace%\classes"
   set "classes=%root%\webapp\WEB-INF\classes"
   if not exist "%classes%" mkdir "%classes%"
 
@@ -438,14 +452,14 @@ exit /b
   if not exist "%lib%" mkdir "%lib%"
 
   :: Visual Studio Code Settings
-  set "vscode=%root%\.vscode"
+  set "vscode=%workspace%\.vscode"
   if not exist "%vscode%" mkdir "%vscode%"
   set "vscodeSettings=%vscode%\settings.json"
   if not exist "%vscodeSettings%" (
     echo {
     echo   "java.project.referencedLibraries": [
     echo     "%globalLib:\=\\%\\**\\*.jar",
-    echo     "webapp\\WEB-INF\\lib\\**\\*.jar"
+    echo     "root\\webapp\\WEB-INF\\lib\\**\\*.jar"
     echo   ]
     echo }
   ) > "%vscodeSettings%"
@@ -479,7 +493,7 @@ exit /b
   )
 
   :: The resulting .addon file
-  set "addonFile=%root%\!name!.addon"
+  set "addonFile=%workspace%\!name!.addon"
 
   :: Deployment descriptor
   set "webXML=%root%\webapp\WEB-INF\web.xml"
@@ -517,24 +531,34 @@ exit /b
   ) > "%webXML%"
   
   :: Git ignore
-  if not exist "%root%\.gitignore" (
+  if not exist "%workspace%\.gitignore" (
     echo .vscode
     echo Utility.bat
     echo classes
-    echo webapp/WEB-INF/classes
-    echo webapp/WEB-INF/lib
+    echo root/LICENSE
+    echo root/webapp/WEB-INF/classes
+    echo root/webapp/WEB-INF/lib
     echo **/*.addon
-  ) > "%root%\.gitignore"
+  ) > "%workspace%\.gitignore"
 
   :: License
-  if not exist "%root%\LICENSE" (
-    copy /Y "%license%" "%root%\LICENSE" >nul
+  if not exist "%workspace%\LICENSE" (
+    copy /Y "%license%" "%workspace%\LICENSE" >nul
   )
 
   :: README
-  if not exist "%root%\README.md" (
+  if not exist "%workspace%\README.md" (
     echo # !name!
-  ) > "%root%\README.md"
+  ) > "%workspace%\README.md"
+
+  :: Workspace configuration properties
+  set "workspaceConfig=%workspace%\config.txt"
+  if exist "%workspaceConfig%" (
+    for /f "usebackq tokens=* delims=" %%i in ("%workspaceConfig%") do set "compileArgs=%%i"
+  )
+  (
+    echo !compileArgs!
+  ) > "%workspaceConfig%"
 
   :: Main workspace command processing loop
   :main
