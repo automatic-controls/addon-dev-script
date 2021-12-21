@@ -47,16 +47,18 @@
 | *./.vscode/settings.json* | Tells *Visual Studio Code* where dependencies are located. |
 | *./.gitignore* | Tells *Git* what to ignore when committing files. |
 | *./Utility.bat* | Script to automate builds. |
-| *./LICENSE* | License file which is packaged into the *.addon* archive. |
+| *./LICENSE* | License file for the project. |
 | *./README.md* | User-friendly information about the project. |
-| *./info.xml* | Communicates basic information to *WebCTRL*. |
+| *./config.txt* | Specifies additional compilation flags. |
 | *./src* | Contains all source code. |
 | *./classes* | Contains and indexes compiled *.class* files. |
 | *./classes/index.txt* | Records last modified timestamps for source code to avoid unnecessary recompilation. |
-| *./webapp* | Static resources (e.g, files and folders including *html*, *css*, *js*, *jsp*, and *png*). |
-| *./webapp/WEB-INF/web.xml* | Deployment descriptor (e.g, servlet, filter, and listener mappings). |
-| *./webapp/WEB-INF/classes* | Contains compiled *.class* files. |
-| *./webapp/WEB-INF/lib* | Contains dependencies which should be packaged into the *.addon* archive. |
+| *./root* | Root directory packaged into the *.addon* archive. |
+| *./root/info.xml* | Contains basic information. |
+| *./root/webapp* | Static resources (e.g, files and folders including *html*, *css*, *js*, *jsp*, and *png*). |
+| *./root/webapp/WEB-INF/web.xml* | Deployment descriptor (e.g, servlet, filter, and listener mappings). |
+| *./root/webapp/WEB-INF/classes* | Contains compiled *.class* files. |
+| *./root/webapp/WEB-INF/lib* | Dependencies not provided by *WebCTRL* at runtime. |
 
 ## Command Reference
 
@@ -67,11 +69,11 @@ The following commands may be used to automate add-on compilation and packaging.
 | `help` | Displays a help message listing these commands with brief descriptions. |
 | `cls` | Clears the terminal. |
 | `new` | Exits the current context and prompts you to initialize a new project. |
-| `build` | Compiles source code. The last modified timestamp for each *.java* file is recorded to avoid unnecessary recompilation. |
+| `build [args]` | Compiles source code. The last modified timestamp for each *.java* file is recorded to avoid unnecessary recompilation. Arguments are passed to the `javac` compilation command. Arguments are stored for future invokation, so you only have to type them once. The default compilation flag is `--release 11`. |
 | `pack` | Packages all relevant files into a newly created *.addon* archive. |
-| `make` | Calls `build` and `pack`. |
+| `make [args]` | Calls `build` and `pack`. Arguments are passed to `build`. |
 | `sign` | Signs the *.addon* file. |
-| `forge` | Calls `make` and `sign`. |
+| `forge [args]` | Calls `make` and `sign`. Arguments are passed to `make`. |
 | `deploy` | Copies the *.addon* archive and authenticator certificate to the bound *WebCTRL* installation. |
 | `git [args]` | All [*Git*](https://git-scm.com/) commands are executed literally. |
 
@@ -83,7 +85,7 @@ The following commands may be used to automate add-on compilation and packaging.
 
 ## Dependency Collection
 
-Runtime dependencies are located in *./lib* relative to your local clone of this repository. These dependencies do not need to be packaged into your *.addon* file because they are provided by *WebCTRL* at runtime. Other external dependencies should be placed in *./webapp/WEB-INF/lib* relative to your project folder. The following runtime dependencies are collected from your *WebCTRL* installation:
+Runtime dependencies are located in *./lib* relative to your local clone of this repository. These dependencies do not need to be packaged into your *.addon* file because they are provided by *WebCTRL* at runtime. Other external dependencies should be placed in *./root/webapp/WEB-INF/lib* relative to your project folder. The following runtime dependencies are collected from your *WebCTRL* installation:
 
 | Dependency | Location Relative to *WebCTRL* |
 | - | - |
