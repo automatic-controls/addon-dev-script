@@ -535,6 +535,7 @@ exit /b
     echo .vscode
     echo Utility.bat
     echo classes
+    echo config.txt
     echo root/LICENSE
     echo root/webapp/WEB-INF/classes
     echo root/webapp/WEB-INF/lib
