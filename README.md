@@ -67,8 +67,9 @@ The following commands may be used to automate add-on compilation and packaging.
 | *./.vscode/settings.json* | Tells *Visual Studio Code* where dependencies are located. |
 | *./.gitignore* | Tells *Git* what to ignore when committing files. |
 | *./Utility.bat* | Script to automate builds. |
-| *./LICENSE* | License file for the project. |
 | *./README.md* | User-friendly information about the project. |
+| *./DEPENDENCIES* | Record all compile-time dependencies. |
+| *./LICENSE* | License file for the project. |
 | *./config.txt* | Specifies additional compilation flags. |
 | *./src* | Contains all source code. |
 | *./classes* | Contains and indexes compiled *.class* files. |
