@@ -215,7 +215,8 @@ set "commands[4]=make"
 set "commands[5]=sign"
 set "commands[6]=forge"
 set "commands[7]=deploy"
-set "commands=7"
+set "commands[8]=run"
+set "commands=8"
 
 :: Retrieve workspace from parameter
 if "%*" NEQ "" (
@@ -228,59 +229,97 @@ if "%*" NEQ "" (
   echo.
   echo WebCTRL Add-on Project Initializer v%version%
   echo.
-  echo Enter the folder name of the project to initialize.
+  echo Enter the project folder to initialize.
   set /p "workspace=>"
   if "!workspace!" NEQ "" (
-    call :normalizePath workspace "%settings%\..\!workspace!"
+    echo !workspace! | findstr /C:: >nul 2>nul
+    if !ERRORLEVEL! EQU 1 call :normalizePath workspace "%settings%\..\!workspace!"
     goto :initWorkspace
   )
 goto :globalMenu
 
 :help
   echo.
-  echo help   -  displays this message
-  echo cls    -  clears the terminal
-  echo new    -  create a new project
-  echo build  -  compiles .java files
-  echo pack   -  packages files into .addon archive
-  echo make   -  calls build and pack
-  echo sign   -  signs the addon
-  echo forge  -  calls make and sign
-  echo deploy -  copies the addon to WebCTRL
+  echo Online documentation can be found at
+  echo https://github.com/automatic-controls/webctrl-addon-dev/blob/main/README.md
   echo.
-  echo Commands starting with the phrase 'git' are executed literally.
+  echo HELP              Displays this message.
+  echo CLS               Clears the terminal.
+  echo NEW               Exits the current context and prompts you to initialize a new project.
+  echo BUILD [ARGS]      Compiles source code. Arguments are passed to the JAVAC compilation command.
+  echo                   Current build flags: !compileArgs!
+  echo PACK              Packages all relevant files into a newly created .addon archive.
+  echo MAKE [ARGS]       Calls BUILD and PACK. Arguments are passed to BUILD.
+  echo SIGN              Signs the .addon archive.
+  echo FORGE [ARGS]      Calls BUILD, PACK, and SIGN. Arguments are passed to BUILD.
+  echo DEPLOY            Copies the .addon archive and certificate file to the bound WebCTRL installation.
+  echo RUN [ARGS]       Calls BUILD, PACK, SIGN, and DEPLOY. Arguments are passed to BUILD.
+  echo GIT [ARGS]        All Git commands are executed literally.
   echo.
 exit /b
 
-:deploy
-  copy /y "%addonFile%" "%WebCTRL%\addons\!name!.addon" >nul
-  copy /y "%certFile%" "%WebCTRL%\addons\Authenticator.cer" >nul
-exit /b
-
-:sign
-  "%JDKBin%\jarsigner.exe" -keystore "%keystore%" -storepass "!pass!" "%addonFile%" %alias% >nul
-exit /b
+:run
+  ( call :build %* ) && ( call :pack ) && ( call :sign ) && ( call :deploy )
+exit /b %ERRORLEVEL%
 
 :forge
-  call :make %*
-  call :sign
-exit /b
+  ( call :build %* ) && ( call :pack ) && ( call :sign )
+exit /b %ERRORLEVEL%
 
 :make
-  call :build %*
-  call :pack
-exit /b
+  ( call :build %* ) && ( call :pack )
+exit /b %ERRORLEVEL%
 
-:: Pack files into .addon archive
+:deploy
+  if exist "%addonFile%" (
+    echo Deploying...
+    if exist "%WebCTRL%\addons\!name!.addon" del /F "%WebCTRL%\addons\!name!.addon" >nul 2>nul
+    if !ERRORLEVEL! NEQ 0 exit /b 1
+    copy /y "%certFile%" "%WebCTRL%\addons\Authenticator.cer" >nul
+    copy /y "%addonFile%" "%WebCTRL%\addons\!name!.addon" >nul
+    if !ERRORLEVEL! EQU 0 (
+      echo Deployment successful.
+      exit /b 0
+    ) else (
+      echo Deployment unsuccessful.
+      exit /b 1
+    )
+  ) else (
+    echo Cannot deploy because !name!.addon does not exist.
+    exit /b 1
+  )
+
+:sign
+  if exist "%addonFile%" (
+    echo Signing...
+    "%JDKBin%\jarsigner.exe" -keystore "%keystore%" -storepass "!pass!" "%addonFile%" %alias% >nul
+    if !ERRORLEVEL! EQU 0 (
+      echo Signing successful.
+      exit /b 0
+    ) else (
+      echo Signing unsuccessful.
+      exit /b 1
+    )
+  ) else (
+    echo Cannot sign because !name!.addon does not exist.
+    exit /b 1
+  )
+
 :pack
+  echo Packing...
   rmdir /Q /S "%classes%" >nul 2>nul
   for /D %%i in ("%trackingClasses%\*") do robocopy /E "%%~fi" "%classes%" >nul 2>nul
   robocopy /E "%src%" "%classes%" /XF "*.java" >nul 2>nul
   copy /Y "%workspace%\LICENSE" "%root%\LICENSE" >nul 2>nul
   "%JDKBin%\jar.exe" -c -M -f "%addonFile%" -C "%root%" .
-exit /b
+  if %ERRORLEVEL% EQU 0 (
+    echo Packing successful.
+    exit /b 0
+  ) else (
+    echo Packing unsuccessful.
+    exit /b 1
+  )
 
-:: Compile source code
 :build
   if "%*" NEQ "" (
     set "compileArgs=%*"
@@ -290,10 +329,11 @@ exit /b
     rmdir /S /Q "%trackingClasses%" >nul 2>nul
   )
   setlocal
+    set err=0
     set "trackingRecord=%trackingClasses%\index.txt"
     set "changes=0"
     set /a index=0
-    echo Indexing files...
+    echo Indexing files for compilation...
     for /f "tokens=1,* delims==" %%i in ('echo foreach ^($a in ^(Get-ChildItem -Path "%src%" -Recurse -Include *.java^)^){Echo ^($a.LastWriteTime.toString^(^)+"="+$a.FullName^)} ^| PowerShell -Command -') do (
       set /a index+=1
       set "time[!index!]=%%i"
@@ -322,13 +362,14 @@ exit /b
               if !ERRORLEVEL! NEQ 0 (
                 rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
                 set /a newIndex-=1
+                set err=1
               )
             )
           )
         )
         if !exists! EQU 0 (
           set "changes=1"
-          echo Removed: %%k
+          echo Removing: %%k
           rmdir /S /Q "%trackingClasses%\%%i" >nul 2>nul
         )
       )
@@ -349,15 +390,21 @@ exit /b
         if !ERRORLEVEL! NEQ 0 (
           rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
           set /a newIndex-=1
+          set err=1
         )
       )
     )
     (
       for /L %%i in (1,1,!newIndex!) do echo %%i=!newTime[%%i]!=!newFile[%%i]!
     ) > "%trackingRecord%"
-    if "!changes!" EQU "0" echo No source code changes detected.
-  endlocal
-exit /b
+    if %err% EQU 1 (
+      echo Compilation errors occurred.
+    ) else if "!changes!" EQU "0" (
+      echo No source code changes detected.
+    ) else (
+      echo Compilation successful.
+    )
+  endlocal & exit /b %err%
 
 :: Obfuscates text
 :: First parameter - name of variable to store result
@@ -515,17 +562,21 @@ exit /b
     echo     ^<web-resource-collection^>
     echo       ^<web-resource-name^>WEB^</web-resource-name^>
     echo       ^<url-pattern^>/*^</url-pattern^>
-    echo       ^<http-method^>GET^</http-method^>
-    echo       ^<http-method^>POST^</http-method^>
     echo     ^</web-resource-collection^>
-    echo     ^<auth-constraint^>
-    echo       ^<role-name^>login^</role-name^>
-    echo     ^</auth-constraint^>
     echo   ^</security-constraint^>
     echo.
-    echo   ^<login-config^>
-    echo     ^<auth-method^>STANDARD^</auth-method^>
-    echo   ^</login-config^>
+    echo   ^<filter^>
+    echo     ^<filter-name^>RoleFilterAJAX^</filter-name^>
+    echo     ^<filter-class^>com.controlj.green.addonsupport.web.RoleFilter^</filter-class^>
+    echo     ^<init-param^>
+    echo       ^<param-name^>roles^</param-name^>
+    echo       ^<param-value^>view_administrator_only^</param-value^>
+    echo     ^</init-param^>
+    echo   ^</filter^>
+    echo   ^<filter-mapping^>
+    echo     ^<filter-name^>RoleFilterAJAX^</filter-name^>
+    echo     ^<url-pattern^>/*^</url-pattern^>
+    echo   ^</filter-mapping^>
     echo.
     echo ^</web-app^>
   ) > "%webXML%"
@@ -584,7 +635,7 @@ exit /b
         ) else (
           set "exists=0"
           for /l %%i in (1,1,%commands%) do (
-            if "!commands[%%i]!" EQU "%%a" set "exists=1"
+            if /i "!commands[%%i]!" EQU "%%a" set "exists=1"
           )
           if "!exists!" EQU "1" (
             call :!cmd!
