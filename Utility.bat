@@ -583,6 +583,7 @@ exit /b
   
   :: Git ignore
   if not exist "%workspace%\.gitignore" (
+    echo .gitignore
     echo .vscode
     echo Utility.bat
     echo classes
