@@ -163,7 +163,9 @@ set "keystore=%settings%\keystore.jks"
 set "alias=addon_dev"
 
 :: Certificate file
-set "certFile=%settings%\Authenticator.cer"
+set "certFileName=Authenticator.cer"
+for /f "tokens=* delims=" %%i in ('dir /A-D /B "%settings%" ^| findstr /C:.cer') do set "certFileName=%%i"
+set "certFile=%settings%\%certFileName%"
 
 :: Retrieve the keystore password
 :passwordFinder
@@ -260,22 +262,22 @@ exit /b
 
 :run
   ( call :build %* ) && ( call :pack ) && ( call :sign ) && ( call :deploy )
-exit /b %ERRORLEVEL%
+exit /b
 
 :forge
   ( call :build %* ) && ( call :pack ) && ( call :sign )
-exit /b %ERRORLEVEL%
+exit /b
 
 :make
   ( call :build %* ) && ( call :pack )
-exit /b %ERRORLEVEL%
+exit /b
 
 :deploy
   if exist "%addonFile%" (
     echo Deploying...
     if exist "%WebCTRL%\addons\!name!.addon" del /F "%WebCTRL%\addons\!name!.addon" >nul 2>nul
     if !ERRORLEVEL! NEQ 0 exit /b 1
-    copy /y "%certFile%" "%WebCTRL%\addons\Authenticator.cer" >nul
+    copy /y "%certFile%" "%WebCTRL%\addons\%certFileName%" >nul
     copy /y "%addonFile%" "%WebCTRL%\addons\!name!.addon" >nul
     if !ERRORLEVEL! EQU 0 (
       echo Deployment successful.
