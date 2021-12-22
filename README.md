@@ -108,6 +108,6 @@ The generated 2048-bit RSA key-pair is valid for 100 years, uses SHA512 as the s
 
 **Remark:** *WebCTRL* uses the same obfuscation algorithm in a few places I've found. Anyone can inspect the *JavaScript* in a *WebCTRL* login page to discover that operator passwords are obfuscated in this way before being sent to the server. The *webserver.keystorepassword* entry from *./resources/properties/settings.properties* (relative to *WebCTRL*) is also obfuscated using the same algorithm.
 
-## Compatability Notes
+## Compatibility Notes
 
 *WebCTRL* may complain if your add-on name includes spaces. You should use the build flag `--release 11` for *WebCTRL8.0* and `--release 8` for *WebCTRL7.0*. These flags indicate the *JVM* version to use for compilation. You can determine the appropriate *JVM* version by invoking `"[WebCTRL]\bin\java\jre\bin\java.exe" -version` from command prompt (after replacing `[WebCTRL]` with the path to your *WebCTRL* installation directory).
