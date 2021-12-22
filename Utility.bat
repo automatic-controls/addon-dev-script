@@ -323,6 +323,7 @@ exit /b
   )
 
 :build
+  echo Indexing...
   if "%*" NEQ "" (
     set "compileArgs=%*"
     (
@@ -330,12 +331,15 @@ exit /b
     ) > "%workspaceConfig%"
     rmdir /S /Q "%trackingClasses%" >nul 2>nul
   )
+  (
+    for /r "%globalLib%" %%i in (*.jar) do echo %%~ni
+    for /r "%lib%" %%i in (*.jar) do echo %%~ni
+  ) > "%depRecord%"
   setlocal
     set err=0
     set "trackingRecord=%trackingClasses%\index.txt"
     set "changes=0"
     set /a index=0
-    echo Indexing files for compilation...
     for /f "tokens=1,* delims==" %%i in ('echo foreach ^($a in ^(Get-ChildItem -Path "%src%" -Recurse -Include *.java^)^){Echo ^($a.LastWriteTime.toString^(^)+"="+$a.FullName^)} ^| PowerShell -Command -') do (
       set /a index+=1
       set "time[!index!]=%%i"
@@ -400,9 +404,9 @@ exit /b
       for /L %%i in (1,1,!newIndex!) do echo %%i=!newTime[%%i]!=!newFile[%%i]!
     ) > "%trackingRecord%"
     if %err% EQU 1 (
-      echo Compilation errors occurred.
+      echo Compilation unsuccessful.
     ) else if "!changes!" EQU "0" (
-      echo No source code changes detected.
+      echo Compilation skipped.
     ) else (
       echo Compilation successful.
     )
@@ -499,6 +503,9 @@ exit /b
   :: External dependencies (packaged into the addon)
   set "lib=%root%\webapp\WEB-INF\lib"
   if not exist "%lib%" mkdir "%lib%"
+
+  :: Dependency record
+  set "depRecord=%workspace%\DEPENDENCIES"
 
   :: Visual Studio Code Settings
   set "vscode=%workspace%\.vscode"
