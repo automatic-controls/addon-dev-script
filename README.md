@@ -50,14 +50,14 @@ The following commands may be used to automate add-on compilation and packaging.
 | - | - |
 | `help` | Displays a help message listing these commands with brief descriptions. |
 | `cls` | Clears the terminal. |
-| `new` | Exits the current context and prompts you to initialize a new project. |
+| `init [--new]` | Reinitializes the current project if no parameters are given. Prompts you to initialize a new project if the `--new` flag is given. |
 | `build [args]` | Compiles source code. The last modified timestamp for each *.java* file is recorded to avoid unnecessary recompilation. Arguments are passed to the `javac` compilation command. Arguments are stored for future invokation, so you only have to type them once. The default compilation flag is `--release 11`. |
 | `pack` | Packages all relevant files into a newly created *.addon* archive. |
 | `make [args]` | Calls `build` and `pack`. Arguments are passed to `build`. |
 | `sign` | Signs the *.addon* archive. |
 | `forge [args]` | Calls `build`, `pack`, and `sign`. Arguments are passed to `build`. |
 | `deploy` | Copies the *.addon* archive and authenticator certificate to the bound *WebCTRL* installation. |
-| `run [args]` | Calls `build`, `pack`, `sign`, and `deploy`. Arguments are passed to `build`. |
+| `exec [args]` | Calls `build`, `pack`, `sign`, and `deploy`. Arguments are passed to `build`. |
 | `git [args]` | All [*Git*](https://git-scm.com/) commands are executed literally. |
 
 ## Generated Project Structure
