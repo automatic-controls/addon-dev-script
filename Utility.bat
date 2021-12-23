@@ -217,7 +217,7 @@ set "commands[4]=make"
 set "commands[5]=sign"
 set "commands[6]=forge"
 set "commands[7]=deploy"
-set "commands[8]=run"
+set "commands[8]=exec"
 set "commands=8"
 
 :: Retrieve workspace from parameter
@@ -247,7 +247,8 @@ goto :globalMenu
   echo.
   echo HELP              Displays this message.
   echo CLS               Clears the terminal.
-  echo NEW               Exits the current context and prompts you to initialize a new project.
+  echo INIT [--new]      Reinitializes the current project if no parameters are given.
+  echo                   Prompts you to initialize a new project if the '--new' flag is given.
   echo BUILD [ARGS]      Compiles source code. Arguments are passed to the JAVAC compilation command.
   echo                   Current build flags: !compileArgs!
   echo PACK              Packages all relevant files into a newly created .addon archive.
@@ -255,12 +256,12 @@ goto :globalMenu
   echo SIGN              Signs the .addon archive.
   echo FORGE [ARGS]      Calls BUILD, PACK, and SIGN. Arguments are passed to BUILD.
   echo DEPLOY            Copies the .addon archive and certificate file to the bound WebCTRL installation.
-  echo RUN [ARGS]       Calls BUILD, PACK, SIGN, and DEPLOY. Arguments are passed to BUILD.
+  echo EXEC [ARGS]       Calls BUILD, PACK, SIGN, and DEPLOY. Arguments are passed to BUILD.
   echo GIT [ARGS]        All Git commands are executed literally.
   echo.
 exit /b
 
-:run
+:exec
   ( call :build %* ) && ( call :pack ) && ( call :sign ) && ( call :deploy )
 exit /b
 
@@ -273,6 +274,10 @@ exit /b
 exit /b
 
 :deploy
+  if "%*" NEQ "" (
+    echo Unexpected parameter.
+    exit /b 1
+  )
   if exist "%addonFile%" (
     echo Deploying...
     if exist "%WebCTRL%\addons\!name!.addon" del /F "%WebCTRL%\addons\!name!.addon" >nul 2>nul
@@ -292,6 +297,10 @@ exit /b
   )
 
 :sign
+  if "%*" NEQ "" (
+    echo Unexpected parameter.
+    exit /b 1
+  )
   if exist "%addonFile%" (
     echo Signing...
     "%JDKBin%\jarsigner.exe" -keystore "%keystore%" -storepass "!pass!" "%addonFile%" %alias% >nul
@@ -308,6 +317,10 @@ exit /b
   )
 
 :pack
+  if "%*" NEQ "" (
+    echo Unexpected parameter.
+    exit /b 1
+  )
   echo Packing...
   rmdir /Q /S "%classes%" >nul 2>nul
   for /D %%i in ("%trackingClasses%\*") do robocopy /E "%%~fi" "%classes%" >nul 2>nul
@@ -332,7 +345,16 @@ exit /b
     rmdir /S /Q "%trackingClasses%" >nul 2>nul
   )
   (
+    echo JDK Version:
+    "%JDKBin%\java.exe" --version
+    echo.
+    echo Compilation Flags:
+    echo !compileArgs!
+    echo.
+    echo Runtime Dependencies:
     for /r "%globalLib%" %%i in (*.jar) do echo %%~ni
+    echo.
+    echo Packaged Dependencies:
     for /r "%lib%" %%i in (*.jar) do echo %%~ni
   ) > "%depRecord%"
   setlocal
@@ -634,14 +656,23 @@ exit /b
     :loop
       set "cmd="
       set /p "cmd=>"
-      if /i "!cmd!" EQU "cls" (
-        goto main
-      ) else if /i "!cmd!" EQU "new" (
-        goto :globalMenu
-      )
       for /f "tokens=1,* delims= " %%a in ("!cmd!") do (
-        if "%%a" EQU "git" (
+        if /i "%%a" EQU "git" (
           call !cmd!
+        ) else if /i "%%a" EQU "cls" (
+          if "%%b" EQU "" (
+            goto :main
+          ) else (
+            echo Unexpected parameter.
+          )
+        ) else if /i "%%a" EQU "init" (
+          if "%%b" EQU "" (
+            goto :initWorkspace
+          ) else if /i "%%b" EQU "--new" (
+            goto :globalMenu
+          ) else (
+            echo Unexpected parameter.
+          )
         ) else (
           set "exists=0"
           for /l %%i in (1,1,%commands%) do (
