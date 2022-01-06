@@ -34,17 +34,29 @@
 
 @echo off
 
+:: Jump to a particular function
+if "%1" EQU "--goto" (
+  for /f "tokens=2,* delims= " %%i in ("%*") do (
+    call :%%i %%j
+    exit /b
+  )
+  exit /b
+)
+
+setlocal EnableDelayedExpansion
+
 :: Version control
-set "version=1.0.0"
+set "version=1.0.1"
 if "%1" EQU "--version" (
   echo %version%
   exit /b
 )
 
 title WebCTRL Add-on Development Utility
-setlocal EnableDelayedExpansion
-
 echo Initializing...
+
+:: This script's location for extension callback usage
+set "callback=%~f0"
 
 :: Default compilation arguments
 set "compileArgs=--release 11"
@@ -240,40 +252,96 @@ if "%*" NEQ "" (
   )
 goto :globalMenu
 
+:clsHelp
+  echo CLS               Clears the terminal.
+exit /b
+
+:initHelp
+  echo INIT [--new]      Reinitializes the current project if no parameters are given.
+  echo                   Prompts you to initialize a new project if the '--new' flag is given.
+exit /b
+
 :help
+  if exist "%ext%\help.bat" (
+    call "%ext%\help.bat" %*
+    exit /b
+  )
+  if /i "%*" EQU "--help" (
+    echo HELP              Displays this message.
+    exit /b
+  )
   echo.
   echo Online documentation can be found at
   echo https://github.com/automatic-controls/webctrl-addon-dev/blob/main/README.md
   echo.
-  echo HELP              Displays this message.
-  echo CLS               Clears the terminal.
-  echo INIT [--new]      Reinitializes the current project if no parameters are given.
-  echo                   Prompts you to initialize a new project if the '--new' flag is given.
-  echo BUILD [ARGS]      Compiles source code. Arguments are passed to the JAVAC compilation command.
-  echo                   Current build flags: !compileArgs!
-  echo PACK              Packages all relevant files into a newly created .addon archive.
-  echo MAKE [ARGS]       Calls BUILD and PACK. Arguments are passed to BUILD.
-  echo SIGN              Signs the .addon archive.
-  echo FORGE [ARGS]      Calls BUILD, PACK, and SIGN. Arguments are passed to BUILD.
-  echo DEPLOY            Copies the .addon archive and certificate file to the bound WebCTRL installation.
-  echo EXEC [ARGS]       Calls BUILD, PACK, SIGN, and DEPLOY. Arguments are passed to BUILD.
   echo GIT [ARGS]        All Git commands are executed literally.
+  call :initHelp
+  call :clsHelp
+  setlocal
+    for /l %%i in (1,1,%commands%) do (
+      set "cmd=!commands[%%i]!"
+      if exist "%ext%\!cmd!.bat" (
+        call "%ext%\!cmd!.bat" --help
+      ) else (
+        call :!cmd! --help
+      )
+    )
+    for %%i in ("%ext%\*.bat") do (
+      set prev=0
+      for /l %%j in (1,1,%commands%) do (
+        if "%%~ni" EQU "!commands[%%j]!" set prev=1
+      )
+      if !prev! EQU 0 call "%%~fi" --help
+    )
+  endlocal
   echo.
 exit /b
 
 :exec
+  if exist "%ext%\exec.bat" (
+    call "%ext%\exec.bat" %*
+    exit /b
+  )
+  if /i "%*" EQU "--help" (
+    echo EXEC [ARGS]       Calls BUILD, PACK, SIGN, and DEPLOY. Arguments are passed to BUILD.
+    exit /b
+  )
   ( call :build %* ) && ( call :pack ) && ( call :sign ) && ( call :deploy )
 exit /b
 
 :forge
+  if exist "%ext%\forge.bat" (
+    call "%ext%\forge.bat" %*
+    exit /b
+  )
+  if /i "%*" EQU "--help" (
+    echo FORGE [ARGS]      Calls BUILD, PACK, and SIGN. Arguments are passed to BUILD.
+    exit /b
+  )
   ( call :build %* ) && ( call :pack ) && ( call :sign )
 exit /b
 
 :make
+  if exist "%ext%\make.bat" (
+    call "%ext%\make.bat" %*
+    exit /b
+  )
+  if /i "%*" EQU "--help" (
+    echo MAKE [ARGS]       Calls BUILD and PACK. Arguments are passed to BUILD.
+    exit /b
+  )
   ( call :build %* ) && ( call :pack )
 exit /b
 
 :deploy
+  if exist "%ext%\deploy.bat" (
+    call "%ext%\deploy.bat" %*
+    exit /b
+  )
+  if /i "%*" EQU "--help" (
+    echo DEPLOY            Copies the .addon archive and certificate file to the bound WebCTRL installation.
+    exit /b
+  )
   if "%*" NEQ "" (
     echo Unexpected parameter.
     exit /b 1
@@ -297,6 +365,14 @@ exit /b
   )
 
 :sign
+  if exist "%ext%\sign.bat" (
+    call "%ext%\sign.bat" %*
+    exit /b
+  )
+  if /i "%*" EQU "--help" (
+    echo SIGN              Signs the .addon archive.
+    exit /b
+  )
   if "%*" NEQ "" (
     echo Unexpected parameter.
     exit /b 1
@@ -317,6 +393,14 @@ exit /b
   )
 
 :pack
+  if exist "%ext%\pack.bat" (
+    call "%ext%\pack.bat" %*
+    exit /b
+  )
+  if /i "%*" EQU "--help" (
+    echo PACK              Packages all relevant files into a newly created .addon archive.
+    exit /b
+  )
   if "%*" NEQ "" (
     echo Unexpected parameter.
     exit /b 1
@@ -336,6 +420,15 @@ exit /b
   )
 
 :build
+  if exist "%ext%\build.bat" (
+    call "%ext%\build.bat" %*
+    exit /b
+  )
+  if /i "%*" EQU "--help" (
+    echo BUILD [ARGS]      Compiles source code. Arguments are passed to the JAVAC compilation command.
+    echo                   Current build flags: !compileArgs!
+    exit /b
+  )
   echo Indexing...
   if "%*" NEQ "" (
     set "compileArgs=%*"
@@ -359,7 +452,6 @@ exit /b
   ) > "%depRecord%"
   setlocal
     set err=0
-    set "trackingRecord=%trackingClasses%\index.txt"
     set "changes=0"
     set /a index=0
     for /f "tokens=1,* delims==" %%i in ('echo foreach ^($a in ^(Get-ChildItem -Path "%src%" -Recurse -Include *.java^)^){Echo ^($a.LastWriteTime.toString^(^)+"="+$a.FullName^)} ^| PowerShell -Command -') do (
@@ -492,6 +584,9 @@ exit /b
   set "root=%workspace%\root"
   if not exist "%root%" mkdir "%root%"
 
+  :: Folder containing custom batch file command extensions for this utility.
+  set "ext=%workspace%\ext"
+
   :: Create local launcher within workspace
   setlocal
     set "batch=%workspace%\Utility.bat"
@@ -519,6 +614,7 @@ exit /b
 
   :: Compiled classes
   set "trackingClasses=%workspace%\classes"
+  set "trackingRecord=%trackingClasses%\index.txt"
   set "classes=%root%\webapp\WEB-INF\classes"
   if not exist "%classes%" mkdir "%classes%"
 
@@ -662,6 +758,8 @@ exit /b
         ) else if /i "%%a" EQU "cls" (
           if "%%b" EQU "" (
             goto :main
+          ) else if /i "%%b" EQU "--help" (
+            call :clsHelp
           ) else (
             echo Unexpected parameter.
           )
@@ -670,9 +768,13 @@ exit /b
             goto :initWorkspace
           ) else if /i "%%b" EQU "--new" (
             goto :globalMenu
+          ) else if /i "%%b" EQU "--help" (
+            call :initHelp
           ) else (
             echo Unexpected parameter.
           )
+        ) else if exist "%ext%\%%a.bat" (
+          call "%ext%\%%a.bat" %%b
         ) else (
           set "exists=0"
           for /l %%i in (1,1,%commands%) do (

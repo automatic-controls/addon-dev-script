@@ -60,6 +60,10 @@ The following commands may be used to automate add-on compilation and packaging.
 | `exec [args]` | Calls `build`, `pack`, `sign`, and `deploy`. Arguments are passed to `build`. |
 | `git [args]` | All [*Git*](https://git-scm.com/) commands are executed literally. |
 
+## Extensions
+
+Custom project-specific commands can be created to extend the functionality of this script. For examples, refer to <https://github.com/automatic-controls/webctrl-centralizer/tree/main/ext>. Any batch file placed in *./ext* is treated as an extension. The name of each batch file is used as the command name (case-insensitive). It is expected that each extension prints help information to the terminal when passed the `--help` parameter. Help information is appended to the help menu shown in the terminal. The default commands shown in the previous section can be overridden by extensions. For instance, <https://github.com/automatic-controls/webctrl-centralizer/blob/main/ext/pack.bat> overrides the default `pack` command.
+
 ## Generated Project Structure
 
 | File | Description |
@@ -80,6 +84,7 @@ The following commands may be used to automate add-on compilation and packaging.
 | *./root/webapp/WEB-INF/web.xml* | Deployment descriptor (e.g, servlet, filter, and listener mappings). |
 | *./root/webapp/WEB-INF/classes* | Contains compiled *.class* files. |
 | *./root/webapp/WEB-INF/lib* | Dependencies not provided by *WebCTRL* at runtime. |
+| *./ext* | Contains [extensions](#extensions) that provide additional commands. |
 
 ## Manual Deployment
 
@@ -101,13 +106,13 @@ Runtime dependencies are located in *./lib* relative to your local clone of this
 | [*webaccess-api-addon*](http://repo.alcshare.com/com/controlj/green/webaccess-api-addon/) | *./modules/webaccess* |
 | [*xdatabase-api-addon*](http://repo.alcshare.com/com/controlj/green/xdatabase-api-addon/) | *./modules/xdatabase* |
 
-If you change the *WebCTRL* installation by manually editing *./config.txt* (relative to your local clone of this repository), then you should delete *./lib* to force dependency recollection.
+If you change the *WebCTRL* installation by manually editing *./config.txt* (relative to your local clone of this repository), then you should delete *./lib* to force dependency recollection. Feel free to browse your *WebCTRL* installation for dependencies that give access to other internal APIs if these defaults are insufficient.
 
 ## Keystore Management
 
 The generated 2048-bit RSA key-pair is valid for 100 years, uses SHA512 as the signature algorithm, and is stored under the alias *addon_dev* in *./keystore.jks*. You can also use a preexisting key-pair under the same alias. An obfuscation of the keystore password is stored in *./config.txt*. The obfuscation algorithm reverses the ordering and XORs each character code with 4. **THE KEYSTORE PASSWORD IS NOT ENCRYPTED; IT IS ONLY OBFUSCATED**.
 
-**Remark:** *WebCTRL* uses the same obfuscation algorithm in a few places I've found. Anyone can inspect the *JavaScript* in a *WebCTRL* login page to discover that operator passwords are obfuscated in this way before being sent to the server. The *webserver.keystorepassword* entry from *./resources/properties/settings.properties* (relative to *WebCTRL*) is also obfuscated using the same algorithm.
+**Remark:** *WebCTRL* uses the same obfuscation algorithm in a few places I've found. Anyone can inspect the *JavaScript* in a *WebCTRL* login page to discover that operator passwords are obfuscated in this way before being sent to the server (of course, this is **not** a substitute for encrypting traffic with *HTTPS*). The *webserver.keystorepassword* entry from *./resources/properties/settings.properties* (relative to *WebCTRL*) is also obfuscated using the same algorithm.
 
 ## Compatibility Notes
 
