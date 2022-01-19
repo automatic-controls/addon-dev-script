@@ -134,6 +134,7 @@ setlocal
   set "depFolders[3]=%WebCTRL%\modules\alarmmanager"
   set "depFiles[3]=alarmmanager-api-addon"
   set "depFolders[4]=%WebCTRL%\bin\lib"
+  set "depFolders2[4]=%WebCTRL%\modules\bacnet"
   set "depFiles[4]=bacnet-api-addon"
   set "depFolders[5]=%WebCTRL%\modules\directaccess"
   set "depFiles[5]=directaccess-api-addon"
@@ -154,10 +155,22 @@ setlocal
         set "file=%%j"
       )
       if "!file!" EQU "" (
-        echo Failed to collect dependency: !depFiles[%%i]!
+        for /F %%j in ('dir "!depFolders2[%%i]!" /B ^| findstr /C:"!depFiles[%%i]!"') do (
+          set "file=%%j"
+        )
+        if "!file!" EQU "" (
+          echo Failed to collect dependency: !depFiles[%%i]!
+        ) else (
+          copy /Y "!depFolders2[%%i]!\!file!" "%globalLib%\!file!" >nul
+          if !ErrorLevel!==0 (
+            echo Collected dependency: !depFiles[%%i]!
+          ) else (
+            echo Failed to collect dependency: !depFiles[%%i]!
+          )
+        )
       ) else (
         copy /Y "!depFolders[%%i]!\!file!" "%globalLib%\!file!" >nul
-        if %ErrorLevel%==0 (
+        if !ErrorLevel!==0 (
           echo Collected dependency: !depFiles[%%i]!
         ) else (
           echo Failed to collect dependency: !depFiles[%%i]!
