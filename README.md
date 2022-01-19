@@ -83,7 +83,8 @@ Custom project-specific commands can be created to extend the functionality of t
 | *./root/webapp* | Static resources (e.g, files and folders including *html*, *css*, *js*, *jsp*, and *png*). |
 | *./root/webapp/WEB-INF/web.xml* | Deployment descriptor (e.g, servlet, filter, and listener mappings). |
 | *./root/webapp/WEB-INF/classes* | Contains compiled *.class* files. |
-| *./root/webapp/WEB-INF/lib* | Dependencies not provided by *WebCTRL* at runtime. |
+| *./root/webapp/WEB-INF/lib* | Contains dependencies **not** provided by *WebCTRL* at runtime. |
+| *./lib* | Contains project-specific dependencies provided by *WebCTRL* at runtime. |
 | *./ext* | Contains [extensions](#extensions) that provide additional commands. |
 
 ## Manual Deployment
@@ -106,7 +107,7 @@ Runtime dependencies are located in *./lib* relative to your local clone of this
 | [*webaccess-api-addon*](http://repo.alcshare.com/com/controlj/green/webaccess-api-addon/) | *./modules/webaccess* |
 | [*xdatabase-api-addon*](http://repo.alcshare.com/com/controlj/green/xdatabase-api-addon/) | *./modules/xdatabase* |
 
-If you change the *WebCTRL* installation by manually editing *./config.txt* (relative to your local clone of this repository), then you should delete *./lib* to force dependency recollection. Feel free to browse your *WebCTRL* installation for dependencies that give access to other internal APIs if these defaults are insufficient.
+If you change the *WebCTRL* installation by manually editing *./config.txt* (relative to your local clone of this repository), then you should delete *./lib* to force dependency recollection. Feel free to browse your *WebCTRL* installation for dependencies that give access to other internal APIs if these defaults are insufficient. If you would like to add a *WebCTRL* API to one project folder without affecting any other projects, the *.jar* file should be placed in *./lib* relative to your project folder.
 
 ## Keystore Management
 

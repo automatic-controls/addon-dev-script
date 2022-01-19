@@ -4,7 +4,7 @@
 
 :: BSD 3-Clause License
 :: 
-:: Copyright (c) 2021, Automatic Controls Equipment Systems, Inc.
+:: Copyright (c) 2022, Automatic Controls Equipment Systems, Inc.
 :: All rights reserved.
 :: 
 :: Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@ if "%1" EQU "--goto" (
 setlocal EnableDelayedExpansion
 
 :: Version control
-set "version=1.0.1"
+set "version=1.0.2"
 if "%1" EQU "--version" (
   echo %version%
   exit /b
@@ -446,6 +446,7 @@ exit /b
     echo.
     echo Runtime Dependencies:
     for /r "%globalLib%" %%i in (*.jar) do echo %%~ni
+    for /r "%localLib%" %%i in (*.jar) do echo %%~ni
     echo.
     echo Packaged Dependencies:
     for /r "%lib%" %%i in (*.jar) do echo %%~ni
@@ -478,7 +479,7 @@ exit /b
               set "changes=1"
               rmdir /S /Q "%trackingClasses%\%%i" >nul 2>nul
               mkdir "%trackingClasses%\!newIndex!"
-              "%JDKBin%\javac.exe" !compileArgs! -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*" "%%k"
+              "%JDKBin%\javac.exe" !compileArgs! -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*;%localLib%\*" "%%k"
               if !ERRORLEVEL! NEQ 0 (
                 rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
                 set /a newIndex-=1
@@ -506,7 +507,7 @@ exit /b
         set "newFile[!newIndex!]=!file[%%i]!"
         if exist "%trackingClasses%\!newIndex!" rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
         mkdir "%trackingClasses%\!newIndex!"
-        "%JDKBin%\javac.exe" !compileArgs! -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*" "!file[%%i]!"
+        "%JDKBin%\javac.exe" !compileArgs! -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*;%localLib%\*" "!file[%%i]!"
         if !ERRORLEVEL! NEQ 0 (
           rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
           set /a newIndex-=1
@@ -622,6 +623,10 @@ exit /b
   set "lib=%root%\webapp\WEB-INF\lib"
   if not exist "%lib%" mkdir "%lib%"
 
+  :: Local runtime dependencies (not packaged into the addon)
+  set "localLib=%workspace%\lib"
+  if not exist "%localLib%" mkdir "%localLib%"
+
   :: Dependency record
   set "depRecord=%workspace%\DEPENDENCIES"
 
@@ -633,7 +638,8 @@ exit /b
     echo {
     echo   "java.project.referencedLibraries": [
     echo     "%globalLib:\=\\%\\**\\*.jar",
-    echo     "root\\webapp\\WEB-INF\\lib\\**\\*.jar"
+    echo     "root\\webapp\\WEB-INF\\lib\\**\\*.jar",
+    echo     "lib\\**\\*.jar"
     echo   ]
     echo }
   ) > "%vscodeSettings%"
@@ -718,6 +724,7 @@ exit /b
     echo root/LICENSE
     echo root/webapp/WEB-INF/classes
     echo root/webapp/WEB-INF/lib
+    echo lib
     echo **/*.addon
   ) > "%workspace%\.gitignore"
 
