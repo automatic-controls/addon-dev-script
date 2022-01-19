@@ -97,7 +97,7 @@ Custom project-specific commands can be created to extend the functionality of t
 
 Runtime dependencies are located in *./lib* relative to your local clone of this repository. These dependencies do not need to be packaged into your *.addon* file because they are provided by *WebCTRL* at runtime. Other external dependencies should be placed in *./root/webapp/WEB-INF/lib* relative to your project folder. The following runtime dependencies are collected from your *WebCTRL* installation:
 
-| Dependency | Location Relative to *WebCTRL* |
+| Dependency | Location Relative to *WebCTRL8.0* |
 | - | - |
 | [*tomcat-embed-core*](https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api) | *./webserver/lib* |
 | [*addonsupport-api-addon*](http://repo.alcshare.com/com/controlj/green/addonsupport-api-addon/) | *./modules/addonsupport* |
