@@ -52,7 +52,7 @@ if "%1" EQU "--version" (
   exit /b
 )
 
-title WebCTRL Add-on Development Utility
+title Add-On Development Utility for WebCTRL
 echo Initializing...
 
 :: This script's location for extension callback usage
@@ -254,7 +254,7 @@ if "%*" NEQ "" (
 :globalMenu
   cls
   echo.
-  echo WebCTRL Add-on Project Initializer v%version%
+  echo WebCTRL Add-On Project Initializer v%version%
   echo.
   echo Enter the project folder to initialize.
   set /p "workspace=>"
@@ -285,7 +285,7 @@ exit /b
   )
   echo.
   echo Online documentation can be found at
-  echo https://github.com/automatic-controls/webctrl-addon-dev/blob/main/README.md
+  echo https://github.com/automatic-controls/addon-dev-script/blob/main/README.md
   echo.
   echo GIT [ARGS]        All Git commands are executed literally.
   call :initHelp
@@ -764,7 +764,7 @@ exit /b
   :main
     cls
     echo.
-    echo WebCTRL Add-on Development Utility
+    echo Add-On Development Utility for WebCTRL
     echo Project: !name!
     echo.
     echo Type 'help' for a list of commands.
