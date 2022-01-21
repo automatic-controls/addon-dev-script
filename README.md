@@ -1,4 +1,6 @@
-# WebCTRL Add-On Development
+# Add-On Development Script for WebCTRL
+
+WebCTRL is a trademark of Automated Logic Corporation.  Any other trademarks mentioned herein are the property of their respective owners.
 
 [This script](Utility.bat) may be used to automate certain aspects of *WebCTRL* add-on development on *Windows* operating systems. *WebCTRL SDK* dependencies are automatically collected from a local *WebCTRL* installation. Commands are provided for add-on compilation and packaging. Keystore management is automatic, so you don't have to worry about manually signing your *.addon* file.
 
@@ -62,7 +64,7 @@ The following commands may be used to automate add-on compilation and packaging.
 
 ## Extensions
 
-Custom project-specific commands can be created to extend the functionality of this script. For examples, refer to <https://github.com/automatic-controls/webctrl-centralizer/tree/main/ext>. Any batch file placed in *./ext* is treated as an extension. The name of each batch file is used as the command name (case-insensitive). It is expected that each extension prints help information to the terminal when passed the `--help` parameter. Help information is appended to the help menu shown in the terminal. The default commands shown in the previous section can be overridden by extensions. For instance, <https://github.com/automatic-controls/webctrl-centralizer/blob/main/ext/pack.bat> overrides the default `pack` command.
+Custom project-specific commands can be created to extend the functionality of this script. For examples, refer to <https://github.com/automatic-controls/centralizer-for-webctrl/tree/main/ext>. Any batch file placed in *./ext* is treated as an extension. The name of each batch file is used as the command name (case-insensitive). It is expected that each extension prints help information to the terminal when passed the `--help` parameter. Help information is appended to the help menu shown in the terminal. The default commands shown in the previous section can be overridden by extensions. For instance, <https://github.com/automatic-controls/centralizer-for-webctrl/blob/main/ext/pack.bat> overrides the default `pack` command.
 
 ## Generated Project Structure
 
