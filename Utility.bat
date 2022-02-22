@@ -361,8 +361,12 @@ exit /b
   )
   if exist "%addonFile%" (
     echo Deploying...
+    if not exist "%WebCTRL%\addons" mkdir "%WebCTRL%\addons" >nul 2>nul
     if exist "%WebCTRL%\addons\!name!.addon" del /F "%WebCTRL%\addons\!name!.addon" >nul 2>nul
-    if !ERRORLEVEL! NEQ 0 exit /b 1
+    if !ERRORLEVEL! NEQ 0 (
+      echo Failed to overwrite !name!.addon. Please deactivate the addon in WebCTRL before attempting to redeploy.
+      exit /b 1
+    )
     copy /y "%certFile%" "%WebCTRL%\addons\%certFileName%" >nul
     copy /y "%addonFile%" "%WebCTRL%\addons\!name!.addon" >nul
     if !ERRORLEVEL! EQU 0 (
