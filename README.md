@@ -120,3 +120,21 @@ The generated 2048-bit RSA key-pair is valid for 100 years, uses SHA512 as the s
 ## Compatibility Notes
 
 *WebCTRL* may complain if your add-on name includes spaces. You should use the build flag `--release 11` for *WebCTRL8.0* and `--release 8` for *WebCTRL7.0*. These flags indicate the *JVM* version to use for compilation. You can determine the appropriate *JVM* version by invoking `"[WebCTRL]\bin\java\jre\bin\java.exe" -version` from command prompt (after replacing `[WebCTRL]` with the path to your *WebCTRL* installation directory).
+
+## Known Issues
+
+### Automatic Collection of External Dependencies
+
+Recursive dependency collection from *Maven* repositories is not supported. *POM* files are commonly used by other compilation scripts for such purposes.
+
+### Lazy Inline Constants
+
+The *Java* compiler inlines certain constants. This optimization has the potential to cause problems given that this build script only compiles source code files when it detects changes to the last-modified timestamp. For example, suppose *Constants.java* has the following contents.
+```java
+public class Constants {
+   public final static String VERSION = "1.0.0";
+}
+```
+Suppose another class, *Main.java*, contains a reference to `Constants.VERSION`. When *Main.java* is compiled into *Main.class*, the version constant is inlined. Since the constant is evaluated at compilation instead of runtime, *Main.class* will not detect changes to `Constants.VERSION` as one would expect when *Constants.java* is recompiled. In order for changes to inlined constants to fully propagate, all classes which reference the constants must also be recompiled.
+
+Therefore, it is recommended to delete the *./classes* directory and recompile everything after altering inlined constants.
