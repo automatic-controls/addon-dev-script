@@ -670,23 +670,26 @@ exit /b
         set "name=%%j"
       )
     )
+    for /f "tokens=* delims=" %%i in ('type "%infoXML%" ^| findstr /C:"<version>"') do (
+      for /f "tokens=* delims=" %%j in ('echo echo^([Regex]::Match^("%%i"^, " *<version>(.*)</version> *"^).groups[1].Value^) ^| PowerShell -Command -') do (
+        set "projectVersion=%%j"
+      )
+    )
   )
   if "%name%" EQU "" (
     echo Enter basic information about your add-on.
     set /p "name=Name: "
-    setlocal
-      set /p "description=Description: "
-      set /p "version=Version: "
-      set /p "vendor=Vendor: "
-      (
-        echo ^<extension version="1"^>
-        echo   ^<name^>!name!^</name^>
-        echo   ^<description^>!description!^</description^>
-        echo   ^<version^>!version!^</version^>
-        echo   ^<vendor^>!vendor!^</vendor^>
-        echo ^</extension^>
-      ) > "%infoXML%"
-    endlocal
+    set /p "description=Description: "
+    set /p "projectVersion=Version: "
+    set /p "vendor=Vendor: "
+    (
+      echo ^<extension version="1"^>
+      echo   ^<name^>!name!^</name^>
+      echo   ^<description^>!description!^</description^>
+      echo   ^<version^>!projectVersion!^</version^>
+      echo   ^<vendor^>!vendor!^</vendor^>
+      echo ^</extension^>
+    ) > "%infoXML%"
   )
 
   :: The resulting .addon file
