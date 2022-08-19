@@ -46,7 +46,7 @@ if "%1" EQU "--goto" (
 setlocal EnableDelayedExpansion
 
 :: Version control
-set "version=1.0.2"
+set "version=1.1.0"
 if "%1" EQU "--version" (
   echo %version%
   exit /b
@@ -54,6 +54,9 @@ if "%1" EQU "--version" (
 
 title Add-On Development Utility for WebCTRL
 echo Initializing...
+
+:: Whether to let extensions override commands of the same name
+set "override=1"
 
 :: This script's location for extension callback usage
 set "callback=%~f0"
@@ -125,61 +128,8 @@ if "%WebCTRL%" EQU "" (
     goto :webctrlFinder
   )
 
-:: Collect runtime dependencies from the WebCTRL installation
-setlocal
-  set "depFolders[1]=%WebCTRL%\webserver\lib"
-  set "depFiles[1]=tomcat-embed-core"
-  set "depFolders[2]=%WebCTRL%\modules\addonsupport"
-  set "depFiles[2]=addonsupport-api-addon"
-  set "depFolders[3]=%WebCTRL%\modules\alarmmanager"
-  set "depFiles[3]=alarmmanager-api-addon"
-  set "depFolders[4]=%WebCTRL%\bin\lib"
-  set "depFolders2[4]=%WebCTRL%\modules\bacnet"
-  set "depFiles[4]=bacnet-api-addon"
-  set "depFolders[5]=%WebCTRL%\modules\directaccess"
-  set "depFiles[5]=directaccess-api-addon"
-  set "depFolders[6]=%WebCTRL%\modules\webaccess"
-  set "depFiles[6]=webaccess-api-addon"
-  set "depFolders[7]=%WebCTRL%\modules\xdatabase"
-  set "depFiles[7]=xdatabase-api-addon"
-  set "msg=0"
-  for /L %%i in (1,1,7) do (
-    set "exists=0"
-    for /F %%j in ('dir "%globalLib%" /B ^| findstr /C:"!depFiles[%%i]!"') do (
-      set "exists=1"
-    )
-    if "!exists!" EQU "0" (
-      set "msg=1"
-      set "file="
-      for /F %%j in ('dir "!depFolders[%%i]!" /B ^| findstr /C:"!depFiles[%%i]!"') do (
-        set "file=%%j"
-      )
-      if "!file!" EQU "" (
-        for /F %%j in ('dir "!depFolders2[%%i]!" /B ^| findstr /C:"!depFiles[%%i]!"') do (
-          set "file=%%j"
-        )
-        if "!file!" EQU "" (
-          echo Failed to collect dependency: !depFiles[%%i]!
-        ) else (
-          copy /Y "!depFolders2[%%i]!\!file!" "%globalLib%\!file!" >nul
-          if !ErrorLevel!==0 (
-            echo Collected dependency: !depFiles[%%i]!
-          ) else (
-            echo Failed to collect dependency: !depFiles[%%i]!
-          )
-        )
-      ) else (
-        copy /Y "!depFolders[%%i]!\!file!" "%globalLib%\!file!" >nul
-        if !ErrorLevel!==0 (
-          echo Collected dependency: !depFiles[%%i]!
-        ) else (
-          echo Failed to collect dependency: !depFiles[%%i]!
-        )
-      )
-    )
-  )
-  if "%msg%" EQU "1" echo.
-endlocal
+:: Collect dependencies
+if exist "%settings%\DEPENDENCIES" call :collect "%settings%\DEPENDENCIES" "%globalLib%"
 
 :: Keystore used for signing the addon
 set "keystore=%settings%\keystore.jks"
@@ -189,7 +139,7 @@ set "alias=addon_dev"
 
 :: Certificate file
 set "certFileName=Authenticator.cer"
-for /f "tokens=* delims=" %%i in ('dir /A-D /B "%settings%" ^| findstr /C:.cer') do set "certFileName=%%i"
+for /f "tokens=* delims=" %%i in ('dir /A-D /B "%settings%\*.cer"') do set "certFileName=%%i"
 set "certFile=%settings%\%certFileName%"
 
 :: Retrieve the keystore password
@@ -236,14 +186,15 @@ if not exist "%certFile%" (
 
 :: List of valid workspace commands
 set "commands[1]=help"
-set "commands[2]=build"
-set "commands[3]=pack"
-set "commands[4]=make"
-set "commands[5]=sign"
-set "commands[6]=forge"
-set "commands[7]=deploy"
-set "commands[8]=exec"
-set "commands=8"
+set "commands[2]=depend"
+set "commands[3]=build"
+set "commands[4]=pack"
+set "commands[5]=make"
+set "commands[6]=sign"
+set "commands[7]=forge"
+set "commands[8]=deploy"
+set "commands[9]=exec"
+set "commands=9"
 
 :: Retrieve workspace from parameter
 if "%*" NEQ "" (
@@ -275,7 +226,7 @@ exit /b
 exit /b
 
 :help
-  if exist "%ext%\help.bat" (
+  if "%override%" EQU "1" if exist "%ext%\help.bat" (
     call "%ext%\help.bat" %*
     exit /b
   )
@@ -310,8 +261,50 @@ exit /b
   echo.
 exit /b
 
+:depend
+  if "%override%" EQU "1" if exist "%ext%\depend.bat" (
+    call "%ext%\depend.bat" %*
+    exit /b
+  )
+  if /i "%*" EQU "--help" (
+    echo DEPEND [--all]    Attempts to collect missing dependencies.
+    echo                   Recollects all dependencies if the '--all' flag is given.
+    exit /b
+  ) else if /i "%*" EQU "--all" (
+    rmdir /S /Q "%globalLib%" >nul 2>nul
+    rmdir /S /Q "%lib%" >nul 2>nul
+    rmdir /S /Q "%localLib%" >nul 2>nul
+    mkdir "%globalLib%" >nul 2>nul
+    mkdir "%lib%" >nul 2>nul
+    mkdir "%localLib%" >nul 2>nul
+  )
+  setlocal
+    set "err=0"
+    if exist "%settings%\DEPENDENCIES" (
+      call :collect "%settings%\DEPENDENCIES" "%globalLib%"
+      if !ErrorLevel! NEQ 0 set "err=1"
+    ) else (
+      echo No global dependencies detected: "%settings%\DEPENDENCIES"
+      echo.
+    )
+    if exist "%libCollector%" (
+      call :collect "%libCollector%" "%lib%"
+      if !ErrorLevel! NEQ 0 set "err=1"
+    ) else (
+      echo No external dependencies detected: "%libCollector%"
+      echo.
+    )
+    if exist "%localLibCollector%" (
+      call :collect "%localLibCollector%" "%localLib%"
+      if !ErrorLevel! NEQ 0 set "err=1"
+    ) else (
+      echo No runtime dependencies detected: "%localLibCollector%"
+      echo.
+    )
+  endlocal & exit /b %err%
+
 :exec
-  if exist "%ext%\exec.bat" (
+  if "%override%" EQU "1" if exist "%ext%\exec.bat" (
     call "%ext%\exec.bat" %*
     exit /b
   )
@@ -323,7 +316,7 @@ exit /b
 exit /b
 
 :forge
-  if exist "%ext%\forge.bat" (
+  if "%override%" EQU "1" if exist "%ext%\forge.bat" (
     call "%ext%\forge.bat" %*
     exit /b
   )
@@ -335,7 +328,7 @@ exit /b
 exit /b
 
 :make
-  if exist "%ext%\make.bat" (
+  if "%override%" EQU "1" if exist "%ext%\make.bat" (
     call "%ext%\make.bat" %*
     exit /b
   )
@@ -347,7 +340,7 @@ exit /b
 exit /b
 
 :deploy
-  if exist "%ext%\deploy.bat" (
+  if "%override%" EQU "1" if exist "%ext%\deploy.bat" (
     call "%ext%\deploy.bat" %*
     exit /b
   )
@@ -382,7 +375,7 @@ exit /b
   )
 
 :sign
-  if exist "%ext%\sign.bat" (
+  if "%override%" EQU "1" if exist "%ext%\sign.bat" (
     call "%ext%\sign.bat" %*
     exit /b
   )
@@ -410,7 +403,7 @@ exit /b
   )
 
 :pack
-  if exist "%ext%\pack.bat" (
+  if "%override%" EQU "1" if exist "%ext%\pack.bat" (
     call "%ext%\pack.bat" %*
     exit /b
   )
@@ -437,7 +430,7 @@ exit /b
   )
 
 :build
-  if exist "%ext%\build.bat" (
+  if "%override%" EQU "1" if exist "%ext%\build.bat" (
     call "%ext%\build.bat" %*
     exit /b
   )
@@ -467,7 +460,7 @@ exit /b
     echo.
     echo Packaged Dependencies:
     for /r "%lib%" %%i in (*.jar) do echo %%~ni
-  ) > "%depRecord%"
+  ) > "%buildDetails%"
   setlocal
     set err=0
     set "changes=0"
@@ -485,23 +478,28 @@ exit /b
         for /l %%a in (1,1,%index%) do (
           if !exists! EQU 0 if "!file[%%a]!" EQU "%%k" (
             set exists=1
-            set "process[%%a]=1"
             set /a newIndex+=1
-            set "newTime[!newIndex!]=!time[%%a]!"
+            set "process[%%a]=1"
             set "newFile[!newIndex!]=%%k"
-            if "%%j" EQU "!time[%%a]!" (
-              if "%%i" NEQ "!newIndex!" rename "%trackingClasses%\%%i" !newIndex!
-            ) else (
-              echo Compiling: %%k
-              set "changes=1"
-              rmdir /S /Q "%trackingClasses%\%%i" >nul 2>nul
-              mkdir "%trackingClasses%\!newIndex!"
-              "%JDKBin%\javac.exe" !compileArgs! -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*;%localLib%\*" "%%k"
-              if !ERRORLEVEL! NEQ 0 (
-                rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
-                set /a newIndex-=1
-                set err=1
+            if !err! EQU 0 (
+              set "newTime[!newIndex!]=!time[%%a]!"
+              if "%%j" EQU "!time[%%a]!" (
+                if "%%i" NEQ "!newIndex!" rename "%trackingClasses%\%%i" !newIndex!
+              ) else (
+                echo Compiling: %%k
+                set "changes=1"
+                rmdir /S /Q "%trackingClasses%\%%i" >nul 2>nul
+                mkdir "%trackingClasses%\!newIndex!"
+                "%JDKBin%\javac.exe" !compileArgs! -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*;%localLib%\*" "%%k"
+                if !ERRORLEVEL! NEQ 0 (
+                  rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
+                  set /a newIndex-=1
+                  set err=1
+                )
               )
+            ) else (
+              set "newTime[!newIndex!]=%%j"
+              if "%%i" NEQ "!newIndex!" rename "%trackingClasses%\%%i" !newIndex!
             )
           )
         )
@@ -515,20 +513,22 @@ exit /b
       rmdir /S /Q "%trackingClasses%" >nul 2>nul
       mkdir "%trackingClasses%"
     )
-    for /l %%i in (1,1,%index%) do (
-      if "!process[%%i]!" EQU "0" (
-        echo Compiling: !file[%%i]!
-        set "changes=1"
-        set /a newIndex+=1
-        set "newTime[!newIndex!]=!time[%%i]!"
-        set "newFile[!newIndex!]=!file[%%i]!"
-        if exist "%trackingClasses%\!newIndex!" rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
-        mkdir "%trackingClasses%\!newIndex!"
-        "%JDKBin%\javac.exe" !compileArgs! -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*;%localLib%\*" "!file[%%i]!"
-        if !ERRORLEVEL! NEQ 0 (
-          rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
-          set /a newIndex-=1
-          set err=1
+    if %err% EQU 0 (
+      for /l %%i in (1,1,%index%) do (
+        if !err! EQU 0 if "!process[%%i]!" EQU "0" (
+          echo Compiling: !file[%%i]!
+          set "changes=1"
+          set /a newIndex+=1
+          set "newTime[!newIndex!]=!time[%%i]!"
+          set "newFile[!newIndex!]=!file[%%i]!"
+          if exist "%trackingClasses%\!newIndex!" rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
+          mkdir "%trackingClasses%\!newIndex!"
+          "%JDKBin%\javac.exe" !compileArgs! -implicit:none -d "%trackingClasses%\!newIndex!" -cp "%src%;%globalLib%\*;%lib%\*;%localLib%\*" "!file[%%i]!"
+          if !ERRORLEVEL! NEQ 0 (
+            rmdir /S /Q "%trackingClasses%\!newIndex!" >nul 2>nul
+            set /a newIndex-=1
+            set err=1
+          )
         )
       )
     )
@@ -595,6 +595,59 @@ exit /b
   set "%~1=%~f2"
 exit /b
 
+:: Collect dependencies from the WebCTRL installation or from external websites
+:: Parameters: <dependency-file> <output-folder>
+:collect
+  setlocal
+    set "tmp1=%settings%\tmp1"
+    set "tmp2=%settings%\tmp2"
+    set "err=0"
+    set "msg=0"
+    dir "%~f2\*.jar" /B /A-D 2>nul >"%tmp1%"
+    for /F "usebackq tokens=1,2,* delims=:" %%i in ("%~f1") do (
+      set "exists=0"
+      for /F %%a in ('findstr /R /X "%%j-[0-9].*" "%tmp1%"') do (
+        set "exists=1"
+      )
+      if "!exists!" EQU "0" (
+        set "msg=1"
+        if /I "%%i" EQU "url" (
+          curl --fail --silent --output-dir "%~f2" --remote-name %%k
+          if !ErrorLevel! EQU 0 (
+            echo Collected: %%j
+          ) else (
+            set "err=1"
+            echo Failed to collect: %%j
+          )
+        ) else if /I "%%i" EQU "file" (
+          set "file="
+          dir "%WebCTRL%\%%k\*.jar" /B /A-D 2>nul >"%tmp2%"
+          for /F %%a in ('findstr /R /X "%%j-[0-9].*" "%tmp2%"') do (
+            set "file=%%a"
+          )
+          if "!file!" EQU "" (
+            set "err=1"
+            echo Failed to collect: %%j
+          ) else (
+            copy /Y "%WebCTRL%\%%k\!file!" "%~f2\!file!" >nul
+            if !ErrorLevel!==0 (
+              echo Collected: %%j
+            ) else (
+              set "err=1"
+              echo Failed to collect: %%j
+            )
+          )
+        ) else (
+          set "err=1"
+          echo Failed to collect: %%j
+        )
+      )
+    )
+    if "%msg%" EQU "1" echo.
+    if exist "%tmp1%" del /F "%tmp1%" >nul 2>nul
+    if exist "%tmp2%" del /F "%tmp2%" >nul 2>nul
+  endlocal & exit /b %err%
+
 :initWorkspace
   echo.
   if not exist "%workspace%" mkdir "%workspace%"
@@ -636,16 +689,24 @@ exit /b
   set "classes=%root%\webapp\WEB-INF\classes"
   if not exist "%classes%" mkdir "%classes%"
 
+  :: Configuration file folder
+  set "configFolder=%workspace%\config"
+  if not exist "%configFolder%" mkdir "%configFolder%"
+
   :: External dependencies (packaged into the addon)
   set "lib=%root%\webapp\WEB-INF\lib"
   if not exist "%lib%" mkdir "%lib%"
+  set "libCollector=%configFolder%\EXTERNAL_DEPS"
+  if exist "%libCollector%" call :collect "%libCollector%" "%lib%"
 
   :: Local runtime dependencies (not packaged into the addon)
   set "localLib=%workspace%\lib"
   if not exist "%localLib%" mkdir "%localLib%"
+  set "localLibCollector=%configFolder%\RUNTIME_DEPS"
+  if exist "%localLibCollector%" call :collect "%localLibCollector%" "%localLib%"
 
-  :: Dependency record
-  set "depRecord=%workspace%\DEPENDENCIES"
+  :: Recent build details
+  set "buildDetails=%configFolder%\BUILD_DETAILS"
 
   :: Visual Studio Code Settings
   set "vscode=%workspace%\.vscode"
@@ -702,6 +763,14 @@ exit /b
     echo.
     echo ^<web-app^>
     echo.
+    echo   ^<listener^>
+    echo     ^<listener-class^>^</listener-class^>
+    echo   ^</listener^>
+    echo.
+    echo   ^<welcome-file-list^>
+    echo     ^<welcome-file^>^</welcome-file^>
+    echo   ^</welcome-file-list^>
+    echo.
     echo   ^<servlet^>
     echo     ^<servlet-name^>^</servlet-name^>
     echo     ^<servlet-class^>^</servlet-class^>
@@ -740,11 +809,11 @@ exit /b
     echo .vscode
     echo Utility.bat
     echo classes
-    echo config.txt
     echo root/LICENSE
     echo root/webapp/WEB-INF/classes
     echo root/webapp/WEB-INF/lib
     echo lib
+    echo **/*.jar
     echo **/*.addon
   ) > "%workspace%\.gitignore"
 
@@ -759,13 +828,16 @@ exit /b
   ) > "%workspace%\README.md"
 
   :: Workspace configuration properties
-  set "workspaceConfig=%workspace%\config.txt"
+  set "workspaceConfig=%configFolder%\COMPILE_FLAGS"
   if exist "%workspaceConfig%" (
     for /f "usebackq tokens=* delims=" %%i in ("%workspaceConfig%") do set "compileArgs=%%i"
   )
   (
     echo !compileArgs!
   ) > "%workspaceConfig%"
+
+  :: Execute an optional startup script
+  if exist "%workspace%\startup.bat" call "%workspace%\startup.bat"
 
   :: Main workspace command processing loop
   :main

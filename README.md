@@ -2,13 +2,30 @@
 
 WebCTRL is a trademark of Automated Logic Corporation.  Any other trademarks mentioned herein are the property of their respective owners.
 
-[This script](Utility.bat) may be used to automate certain aspects of *WebCTRL* add-on development on *Windows* operating systems. *WebCTRL SDK* dependencies are automatically collected from a local *WebCTRL* installation. Commands are provided for add-on compilation and packaging. Keystore management is automatic, so you don't have to worry about manually signing your *.addon* file.
+- [Add-On Development Script for WebCTRL](#add-on-development-script-for-webctrl)
+  - [About](#about)
+  - [Setup Instructions](#setup-instructions)
+  - [Command Reference](#command-reference)
+  - [Extensions](#extensions)
+  - [Generated Project Structure](#generated-project-structure)
+  - [Manual Deployment](#manual-deployment)
+  - [Dependencies](#dependencies)
+    - [Automated Collection](#automated-collection)
+  - [Keystore Management](#keystore-management)
+  - [Compatibility Notes](#compatibility-notes)
+  - [Known Issues](#known-issues)
+    - [Recursive Dependency Collection](#recursive-dependency-collection)
+    - [Lazy Inline Constants](#lazy-inline-constants)
+
+## About
+
+[This script](Utility.bat) may be used to automate certain aspects of *WebCTRL* add-on development on *Windows* operating systems. *Windows* version 10 or greater is required. *WebCTRL SDK* dependencies are automatically collected from a local *WebCTRL* installation. Other dependencies may be automatically downloaded from URLs. Commands are provided for add-on compilation and packaging. Keystore management is automatic, so you don't have to worry about manually signing your *.addon* file. Newly created projects are scaffolded by the script to contain all required files.
 
 ## Setup Instructions
 
-1. Install *WebCTRL7.0* or later.
+1. Install *WebCTRL8.0* or later.
 
-1. Install [*JDK 16*](https://jdk.java.net/) or later.
+1. Install the most recent [*JDK*](https://jdk.java.net/) release.
 
 1. Install [*Visual Studio Code*](https://code.visualstudio.com/) and the following extensions:
 
@@ -28,7 +45,7 @@ WebCTRL is a trademark of Automated Logic Corporation.  Any other trademarks men
 
    - If the script cannot locate a *WebCTRL* installation folder under *%SystemDrive%*, you will be prompted to specify an installation path.
 
-     - The script will automatically retrieve all [runtime dependencies](#dependency-collection) from this *WebCTRL* installation.
+     - The script will automatically retrieve all [runtime dependencies](#dependencies) from this *WebCTRL* installation.
 
    - You will be prompted to enter a keystore password and a few other parameters for creating a new keystore. Refer to [Keystore Management](#keystore-management) for more details.
 
@@ -52,6 +69,7 @@ The following commands may be used to automate add-on compilation and packaging.
 | - | - |
 | `help` | Displays a help message listing these commands with brief descriptions. |
 | `cls` | Clears the terminal. |
+| `depend [--all]` | Attempts to collect missing dependencies. Recollects all dependencies if the `--all` flag is given. |
 | `init [--new]` | Reinitializes the current project if no parameters are given. Prompts you to initialize a new project if the `--new` flag is given. |
 | `build [args]` | Compiles source code. The last modified timestamp for each *.java* file is recorded to avoid unnecessary recompilation. Arguments are passed to the `javac` compilation command. Arguments are stored for future invokation, so you only have to type them once. The default compilation flag is `--release 11`. |
 | `pack` | Packages all relevant files into a newly created *.addon* archive. |
@@ -64,7 +82,11 @@ The following commands may be used to automate add-on compilation and packaging.
 
 ## Extensions
 
-Custom project-specific commands can be created to extend the functionality of this script. For examples, refer to <https://github.com/automatic-controls/centralizer-for-webctrl/tree/main/ext>. Any batch file placed in *./ext* is treated as an extension. The name of each batch file is used as the command name (case-insensitive). It is expected that each extension prints help information to the terminal when passed the `--help` parameter. Help information is appended to the help menu shown in the terminal. The default commands shown in the previous section can be overridden by extensions. For instance, <https://github.com/automatic-controls/centralizer-for-webctrl/blob/main/ext/pack.bat> overrides the default `pack` command.
+Custom project-specific commands can be created to extend the functionality of this script. For examples, refer to <https://github.com/automatic-controls/centralizer-for-webctrl/tree/main/ext>. Any batch file placed in *./ext* is treated as an extension. The name of each batch file is used as the command name (case-insensitive). It is expected that each extension prints help information to the terminal when passed the `--help` parameter. Help information is appended to the help menu shown in the terminal.
+
+The default commands shown in the previous section can be overridden by extensions. For instance, <https://github.com/automatic-controls/commissioning-scripts/blob/main/ext/pack.bat> overrides the default `pack` command. This example also shows how to invoke the overridden packing command (akin to the `super` keyword in Java).
+
+An optional script, `./startup.bat`, is invoked whenever a project folder is loaded. This may be used for any additional setup required for project files after cloning a remote repository to your local device.
 
 ## Generated Project Structure
 
@@ -74,20 +96,24 @@ Custom project-specific commands can be created to extend the functionality of t
 | *./.gitignore* | Tells *Git* what to ignore when committing files. |
 | *./Utility.bat* | Script to automate builds. |
 | *./README.md* | User-friendly information about the project. |
-| *./DEPENDENCIES* | Record all compile-time dependencies. |
 | *./LICENSE* | License file for the project. |
-| *./config.txt* | Specifies additional compilation flags. |
+| *./config* | Contains various configuration files for this script. |
+| *./config/BUILD_DETAILS* | Record basic information about the latest build. |
+| *./config/COMPILE_FLAGS* | Specifies additional compilation flags. |
+| *./config/EXTERNAL_DEPS* | File specifying external dependencies for [automatic collection](#automated-collection). |
+| *./config/RUNTIME_DEPS* | File specifying runtime dependencies for [automatic collection](#automated-collection). |
 | *./src* | Contains all source code. |
 | *./classes* | Contains and indexes compiled *.class* files. |
 | *./classes/index.txt* | Records last modified timestamps for source code to avoid unnecessary recompilation. |
 | *./root* | Root directory packaged into the *.addon* archive. |
-| *./root/info.xml* | Contains basic information. |
+| *./root/info.xml* | Contains basic information about the add-on. |
 | *./root/webapp* | Static resources (e.g, files and folders including *html*, *css*, *js*, *jsp*, and *png*). |
 | *./root/webapp/WEB-INF/web.xml* | Deployment descriptor (e.g, servlet, filter, and listener mappings). |
 | *./root/webapp/WEB-INF/classes* | Contains compiled *.class* files. |
 | *./root/webapp/WEB-INF/lib* | Contains dependencies **not** provided by *WebCTRL* at runtime. |
 | *./lib* | Contains project-specific dependencies provided by *WebCTRL* at runtime. |
 | *./ext* | Contains [extensions](#extensions) that provide additional commands. |
+| *./startup.bat* | Batch script which is executed whenever the project folder is loaded. |
 
 ## Manual Deployment
 
@@ -95,7 +121,7 @@ Custom project-specific commands can be created to extend the functionality of t
 
 1. Use the *WebCTRL* interface to install the *.addon* archive of your project.
 
-## Dependency Collection
+## Dependencies
 
 Runtime dependencies are located in *./lib* relative to your local clone of this repository. These dependencies do not need to be packaged into your *.addon* file because they are provided by *WebCTRL* at runtime. Other external dependencies should be placed in *./root/webapp/WEB-INF/lib* relative to your project folder. The following runtime dependencies are collected from your *WebCTRL* installation:
 
@@ -109,7 +135,25 @@ Runtime dependencies are located in *./lib* relative to your local clone of this
 | [*webaccess-api-addon*](http://repo.alcshare.com/com/controlj/green/webaccess-api-addon/) | *./modules/webaccess* |
 | [*xdatabase-api-addon*](http://repo.alcshare.com/com/controlj/green/xdatabase-api-addon/) | *./modules/xdatabase* |
 
-If you change the *WebCTRL* installation by manually editing *./config.txt* (relative to your local clone of this repository), then you should delete *./lib* to force dependency recollection. Feel free to browse your *WebCTRL* installation for dependencies that give access to other internal APIs if these defaults are insufficient. If you would like to add a *WebCTRL* API to one project folder without affecting any other projects, the *.jar* file should be placed in *./lib* relative to your project folder.
+Feel free to browse your *WebCTRL* installation for dependencies that give access to other internal APIs if these defaults are insufficient. If you would like to add a *WebCTRL* API to one project folder without affecting any other projects, the *.jar* file should be placed in *./lib* relative to your project folder. This is also the folder where source jars should be placed for external dependencies (source jars do not need to be packaged into the add-on; however, they are useful for intellisense and documentation).
+
+### Automated Collection
+
+There are three files which define automatic dependency collection. The first is [*./DEPENDENCIES*](./DEPENDENCIES) relative to your local clone of this repository. This file defines global runtime dependencies used by every project (e.g, the *WebCTRL SDK*). The other two files are [*./config/EXTERNAL_DEPS*](https://github.com/automatic-controls/commissioning-scripts/blob/main/config/EXTERNAL_DEPS) and [*./config/RUNTIME_DEPS*](https://github.com/automatic-controls/commissioning-scripts/blob/main/config/RUNTIME_DEPS) relative to each project folder (click the links for an example).
+
+Dependencies specified by *EXTERNAL_DEPS* are placed in *./root/webapp/WEB-INF/lib*. Dependencies specified by *RUNTIME_DEPS* are placed in *./lib*. Dependency collection automatically occurs whenever a project folder is loaded, or it can be manually triggered with the [`depend`](#command-reference) command.
+
+Each dependency list adheres to the same file format. Two schemes currently exist for collecting dependencies. The `file` scheme searches for a dependency located in your *WebCTRL* installation. The `url` scheme downloads a dependency from a website (using [`curl`](https://curl.se/windows/microsoft.html)). See the example:
+
+```
+url:janino:https://repo1.maven.org/maven2/org/codehaus/janino/janino/3.1.7/janino-3.1.7-sources.jar
+url:commons-compiler:https://repo1.maven.org/maven2/org/codehaus/janino/commons-compiler/3.1.7/commons-compiler-3.1.7-sources.jar
+file:spring-context:bin\lib
+file:javax.activation:bin\lib
+file:core-api:modules\core
+```
+
+The general format is `scheme:identifier:location`. For files, the location is a relative path to the folder in your *WebCTRL* installation which contains the dependency. For urls, the location is a direct download link. The identifier should be the first part of the dependency's filename (excluding the version). Dependency filenames are generally expected to match the regular expression `^identifier-\d.*\.jar$`.
 
 ## Keystore Management
 
@@ -123,9 +167,9 @@ The generated 2048-bit RSA key-pair is valid for 100 years, uses SHA512 as the s
 
 ## Known Issues
 
-### Automatic Collection of External Dependencies
+### Recursive Dependency Collection
 
-Recursive dependency collection from *Maven* repositories is not supported. *POM* files are commonly used by other compilation scripts for such purposes.
+Recursive dependency collection from *Maven* repositories is not supported. *POM* files are commonly used by other compilation scripts for such purposes. For this development tool, you must manually specify the URL to download each required dependency individually.
 
 ### Lazy Inline Constants
 
