@@ -46,7 +46,7 @@ if "%1" EQU "--goto" (
 setlocal EnableDelayedExpansion
 
 :: Version control
-set "version=1.1.0"
+set "version=1.1.1"
 if "%1" EQU "--version" (
   echo %version%
   exit /b
@@ -599,20 +599,22 @@ exit /b
 :: Parameters: <dependency-file> <output-folder>
 :collect
   setlocal
-    set "tmp1=%settings%\tmp1"
-    set "tmp2=%settings%\tmp2"
+    set "tmp1=%~dp0tmp1"
+    set "tmp2=%~dp0tmp2"
     set "err=0"
     set "msg=0"
     dir "%~f2\*.jar" /B /A-D 2>nul >"%tmp1%"
     for /F "usebackq tokens=1,2,* delims=:" %%i in ("%~f1") do (
+      set "findString=%%j"
+      if "!findString:~-4!" NEQ ".jar" set "findString=%%j-[0-9].*"
       set "exists=0"
-      for /F %%a in ('findstr /R /X "%%j-[0-9].*" "%tmp1%"') do (
+      for /F %%a in ('findstr /R /X "!findString!" "%tmp1%"') do (
         set "exists=1"
       )
       if "!exists!" EQU "0" (
         set "msg=1"
         if /I "%%i" EQU "url" (
-          curl --fail --silent --output-dir "%~f2" --remote-name %%k
+          curl --location --fail --silent --output-dir "%~f2" --remote-name %%k
           if !ErrorLevel! EQU 0 (
             echo Collected: %%j
           ) else (
@@ -622,7 +624,7 @@ exit /b
         ) else if /I "%%i" EQU "file" (
           set "file="
           dir "%WebCTRL%\%%k\*.jar" /B /A-D 2>nul >"%tmp2%"
-          for /F %%a in ('findstr /R /X "%%j-[0-9].*" "%tmp2%"') do (
+          for /F %%a in ('findstr /R /X "!findString!" "%tmp2%"') do (
             set "file=%%a"
           )
           if "!file!" EQU "" (

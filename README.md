@@ -151,9 +151,11 @@ url:commons-compiler:https://repo1.maven.org/maven2/org/codehaus/janino/commons-
 file:spring-context:bin\lib
 file:javax.activation:bin\lib
 file:core-api:modules\core
+url:CommissioningScripts-0.1.1.jar:https://github.com/automatic-controls/commissioning-scripts/releases/download/v0.1.1-beta/CommissioningScripts-0.1.1.jar
+url:CommissioningScripts-0.1.1-sources.jar:https://github.com/automatic-controls/commissioning-scripts/releases/download/v0.1.1-beta/CommissioningScripts-0.1.1-sources.jar
 ```
 
-The general format is `scheme:identifier:location`. For files, the location is a relative path to the folder in your *WebCTRL* installation which contains the dependency. For urls, the location is a direct download link. The identifier should be the first part of the dependency's filename (excluding the version). Dependency filenames are generally expected to match the regular expression `^identifier-\d.*\.jar$`.
+The general format is `scheme:identifier:location`. For files, the location is a relative path to the folder in your *WebCTRL* installation which contains the dependency. For urls, the location is a direct download link. The identifier should be the first part of the dependency's filename (excluding the version). Dependency filenames are generally expected to match the regular expression `^identifier-\d.*\.jar$`. Alternatively, the identifier may be an exact match to the filename (including the *.jar* extension).
 
 ## Keystore Management
 
