@@ -84,7 +84,7 @@ The following commands may be used to automate add-on compilation and packaging.
 
 Custom project-specific commands can be created to extend the functionality of this script. For examples, refer to <https://github.com/automatic-controls/centralizer-for-webctrl/tree/main/ext>. Any batch file placed in *./ext* is treated as an extension. The name of each batch file is used as the command name (case-insensitive). It is expected that each extension prints help information to the terminal when passed the `--help` parameter. Help information is appended to the help menu shown in the terminal.
 
-The default commands shown in the previous section can be overridden by extensions. For instance, <https://github.com/automatic-controls/commissioning-scripts/blob/main/ext/pack.bat> overrides the default `pack` command. This example also shows how to invoke the overridden packing command (akin to the `super` keyword in Java).
+The default commands shown in the previous section can be overridden by extensions. For instance, <https://github.com/automatic-controls/commissioning-scripts/blob/main/ext/pack.bat> overrides the default `pack` command. This example also shows how to invoke the overridden packing command (akin to the `super` keyword in Java). For an improved `deploy` command, see <https://github.com/automatic-controls/addon-dev-refresh>.
 
 An optional script, `./startup.bat`, is invoked whenever a project folder is loaded. This may be used for any additional setup required for project files after cloning a remote repository to your local device.
 
