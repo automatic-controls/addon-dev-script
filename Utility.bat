@@ -46,7 +46,7 @@ if "%1" EQU "--goto" (
 setlocal EnableDelayedExpansion
 
 :: Version control
-set "version=1.1.1"
+set "version=1.1.2"
 if "%1" EQU "--version" (
   echo %version%
   exit /b
@@ -420,12 +420,19 @@ exit /b
   for /D %%i in ("%trackingClasses%\*") do robocopy /E "%%~fi" "%classes%" >nul 2>nul
   robocopy /E "%src%" "%classes%" /XF "*.java" >nul 2>nul
   copy /Y "%workspace%\LICENSE" "%root%\LICENSE" >nul 2>nul
-  "%JDKBin%\jar.exe" -c -M -f "%addonFile%" -C "%root%" .
+  (
+    for /F "usebackq tokens=* delims=" %%i in (`PowerShell -Command "Get-ChildItem -Recurse -File -Exclude '*-sources.jar' -Name -Path '%root%'"`) do (
+      echo -C "%root:\=\\%" %%i
+    )
+  )>"%~dp0tmp"
+  "%JDKBin%\jar.exe" -c -M -f "%addonFile%" "@%~dp0tmp"
   if %ERRORLEVEL% EQU 0 (
     echo Packing successful.
+    del /F "%~dp0tmp" >nul 2>nul
     exit /b 0
   ) else (
     echo Packing unsuccessful.
+    del /F "%~dp0tmp" >nul 2>nul
     exit /b 1
   )
 
