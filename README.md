@@ -135,7 +135,9 @@ Runtime dependencies are located in *./lib* relative to your local clone of this
 | [*webaccess-api-addon*](http://repo.alcshare.com/com/controlj/green/webaccess-api-addon/) | *./modules/webaccess* |
 | [*xdatabase-api-addon*](http://repo.alcshare.com/com/controlj/green/xdatabase-api-addon/) | *./modules/xdatabase* |
 
-Feel free to browse your *WebCTRL* installation for dependencies that give access to other internal APIs if these defaults are insufficient. If you would like to add a *WebCTRL* API to one project folder without affecting any other projects, the *.jar* file should be placed in *./lib* relative to your project folder. This is also the folder where source jars should be placed for external dependencies (source jars do not need to be packaged into the add-on; however, they are useful for intellisense and documentation).
+Feel free to browse your *WebCTRL* installation for dependencies that give access to other internal APIs if these defaults are insufficient. If you would like to add a *WebCTRL* API to one project folder without affecting any other projects, the *.jar* file should be placed in *./lib* relative to your project folder.
+
+[VSCode](https://code.visualstudio.com/) can provide additional features like hover-text documentation for dependencies when source jars are available. Each source jar (*name-sources.jar*) should be placed alongside the corresponding binary jar (*name.jar*). Source jars are ignored when packing the *.addon* archive in an attempt to minimize file size.
 
 ### Automated Collection
 
