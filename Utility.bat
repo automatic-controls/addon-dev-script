@@ -46,7 +46,7 @@ if "%1" EQU "--goto" (
 setlocal EnableDelayedExpansion
 
 :: Version control
-set "version=1.1.2"
+set "version=1.1.3"
 if "%1" EQU "--version" (
   echo %version%
   exit /b
@@ -421,7 +421,7 @@ exit /b
   robocopy /E "%src%" "%classes%" /XF "*.java" >nul 2>nul
   copy /Y "%workspace%\LICENSE" "%root%\LICENSE" >nul 2>nul
   (
-    for /F "usebackq tokens=* delims=" %%i in (`PowerShell -Command "Get-ChildItem -Recurse -File -Exclude '*-sources.jar' -Name -Path '%root%'"`) do (
+    for /F "usebackq tokens=* delims=" %%i in (`PowerShell -Command "Get-ChildItem -Recurse -Exclude '*-sources.jar' -Name -Path '%root%'"`) do (
       echo -C "%root:\=\\%" %%i
     )
   )>"%~dp0tmp"
