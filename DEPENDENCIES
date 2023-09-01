@@ -1,7 +1,7 @@
 file:tomcat-embed-core:webserver\lib
 file:addonsupport-api-addon:modules\addonsupport
 file:alarmmanager-api-addon:modules\alarmmanager
-file:bacnet-api-addon:bin\lib
+file:bacnet-api-core:bin\lib
 file:directaccess-api-addon:modules\directaccess
 file:webaccess-api-addon:modules\webaccess
 file:xdatabase-api-addon:modules\xdatabase
