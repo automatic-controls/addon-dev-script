@@ -101,6 +101,7 @@ if exist "%config%" call :loadConfig
   )
 
 :: Determine location of WebCTRL installation
+if not exist "%WebCTRL%\webserver\*" set "WebCTRL="
 if "%WebCTRL%" EQU "" (
   for /f %%i in ('dir "%SystemDrive%\" /B /A:D ^| findstr /R /X "WebCTRL[0-9][0-9]*\.[0-9][0-9]*"') do (
     set "WebCTRL=%%i"
