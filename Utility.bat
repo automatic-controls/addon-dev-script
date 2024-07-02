@@ -46,7 +46,7 @@ if "%1" EQU "--goto" (
 setlocal EnableDelayedExpansion
 
 :: Version control
-set "version=1.1.3"
+set "version=1.1.4"
 if "%1" EQU "--version" (
   echo %version%
   exit /b
@@ -82,6 +82,21 @@ set "config=%settings%\config.txt"
 if exist "%config%" call :loadConfig
 
 :: Determine location of JDK bin
+if "%JDKBin%" NEQ "" (
+  "%JDKBin%\java.exe" --version >nul 2>nul
+  if !ERRORLEVEL! NEQ 0 (
+    set "JDKBin="
+  )
+)
+if "%JDKBin%" EQU "" if "%JAVA_HOME%" NEQ "" (
+  set "JDKBin=%JAVA_HOME%\bin"
+  "!JDKBin!\java.exe" --version >nul 2>nul
+  if !ERRORLEVEL! EQU 0 (
+    call :saveConfig
+  ) else (
+    set "JDKBin="
+  )
+)
 :jdkFinder
   set "jdkFound=0"
   if "%JDKBin%" NEQ "" (
@@ -111,6 +126,7 @@ if "%WebCTRL%" EQU "" (
     if exist "!WebCTRL!\webserver\*" (
       echo Bound to installation !WebCTRL!
       echo.
+      call :saveConfig
     ) else (
       set "WebCTRL="
     )
@@ -119,7 +135,7 @@ if "%WebCTRL%" EQU "" (
 :webctrlFinder
   if "%WebCTRL%" EQU "" (
     echo Could not locate WebCTRL installation.
-    echo Please enter the installation path ^(e.g, %SystemDrive%\WebCTRL8.0^).
+    echo Please enter the installation path ^(e.g, %SystemDrive%\WebCTRL9.0^).
     set /p "WebCTRL=>"
     echo.
     call :saveConfig

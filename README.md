@@ -19,15 +19,17 @@ WebCTRL is a trademark of Automated Logic Corporation.  Any other trademarks men
 
 ## About
 
-[This script](Utility.bat) may be used to automate certain aspects of *WebCTRL* add-on development on *Windows* operating systems. *Windows* version 10 or greater is required. *WebCTRL SDK* dependencies are automatically collected from a local *WebCTRL* installation. Other dependencies may be automatically downloaded from URLs. Commands are provided for add-on compilation and packaging. Keystore management is automatic, so you don't have to worry about manually signing your *.addon* file. Newly created projects are scaffolded by the script to contain all required files.
+[This script](Utility.bat) may be used to automate certain aspects of *WebCTRL* add-on development on *Windows* operating systems. *WebCTRL SDK* dependencies are automatically collected from a local *WebCTRL* installation. Other dependencies may be automatically downloaded from URLs. Commands are provided for add-on compilation and packaging. Keystore management is automatic, so you don't have to worry about manually signing your *.addon* file. Newly created projects are scaffolded by the script to contain all required files.
 
 ## Setup Instructions
 
-1. Install *WebCTRL8.0* or later.
+1. Install *WebCTRL8.5* or later.
 
-1. Install the most recent [*JDK*](https://jdk.java.net/) release.
+2. Install the most recent [*JDK*](https://jdk.java.net/) release.
+   - Download the *.zip* file, unpack it, and move the contents to your program files.
+   - Set the `JAVA_HOME` environment variable to the JDK installation directory (e.g, *C:\Program Files\Java\jdk-22.0.1*).
 
-1. Install [*Visual Studio Code*](https://code.visualstudio.com/) and the following extensions:
+3. Install [*Visual Studio Code*](https://code.visualstudio.com/) and the following extensions:
 
    - [Visual Studio IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode)
 
@@ -35,13 +37,13 @@ WebCTRL is a trademark of Automated Logic Corporation.  Any other trademarks men
 
    - [Lanauge Support for Java(TM) by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java)
   
-1. Clone this repository to your local machine.
+4. Clone this repository to your local machine.
 
    - Edit [*LICENSE*](LICENSE) to match your specifications. This license file is copied to the new projects created by the script.
 
-1. Launch [Utility.bat](Utility.bat)
+5. Launch [Utility.bat](Utility.bat)
 
-   - You will be prompted to enter the location of the *JDK* bin.
+   - You may be prompted to enter the location of the *JDK* bin if *%JAVA_HOME%* is not set.
 
    - If the script cannot locate a *WebCTRL* installation folder under *%SystemDrive%*, you will be prompted to specify an installation path.
 
@@ -59,7 +61,7 @@ WebCTRL is a trademark of Automated Logic Corporation.  Any other trademarks men
 
      - You can initialize preexisting project folders. For example, you could clone a remote repository to your local machine, and then initialize it with the script to generate missing files.
 
-1. Review documentation at [*ALCshare*](http://alcshare.com/content/add-ons).
+6. Review documentation at [*ALCshare*](http://alcshare.com/content/add-ons).
 
 ## Command Reference
 
@@ -67,22 +69,22 @@ The following commands may be used to automate add-on compilation and packaging.
 
 | Command | Description |
 | - | - |
-| `help` | Displays a help message listing these commands with brief descriptions. |
-| `cls` | Clears the terminal. |
-| `depend [--all]` | Attempts to collect missing dependencies. Recollects all dependencies if the `--all` flag is given. |
-| `init [--new]` | Reinitializes the current project if no parameters are given. Prompts you to initialize a new project if the `--new` flag is given. |
-| `build [args]` | Compiles source code. The last modified timestamp for each *.java* file is recorded to avoid unnecessary recompilation. Arguments are passed to the `javac` compilation command. Arguments are stored for future invokation, so you only have to type them once. The default compilation flag is `--release 11`. |
-| `pack` | Packages all relevant files into a newly created *.addon* archive. |
-| `make [args]` | Calls `build` and `pack`. Arguments are passed to `build`. |
-| `sign` | Signs the *.addon* archive. |
-| `forge [args]` | Calls `build`, `pack`, and `sign`. Arguments are passed to `build`. |
-| `deploy` | Copies the *.addon* archive and authenticator certificate to the bound *WebCTRL* installation. |
-| `exec [args]` | Calls `build`, `pack`, `sign`, and `deploy`. Arguments are passed to `build`. |
-| `git [args]` | All [*Git*](https://git-scm.com/) commands are executed literally. |
+| **help** | Displays a help message listing these commands with brief descriptions. |
+| **cls** | Clears the terminal. |
+| **depend&nbsp;[&#8209;&#8209;all]** | Attempts to collect missing dependencies. Recollects all dependencies if the `--all` flag is given. |
+| **init&nbsp;[&#8209;&#8209;new]** | Reinitializes the current project if no parameters are given. Prompts you to initialize a new project if the `--new` flag is given. |
+| **build&nbsp;[args]** | Compiles source code. The last modified timestamp for each *.java* file is recorded to avoid unnecessary recompilation. Arguments are passed to the `javac` compilation command. Arguments are stored for future invokation, so you only have to type them once. The default compilation flag is `--release 11`. |
+| **pack** | Packages all relevant files into a newly created *.addon* archive. |
+| **make&nbsp;[args]** | Calls `build` and `pack`. Arguments are passed to `build`. |
+| **sign** | Signs the *.addon* archive. |
+| **forge&nbsp;[args]** | Calls `build`, `pack`, and `sign`. Arguments are passed to `build`. |
+| **deploy** | Copies the *.addon* archive and authenticator certificate to the bound *WebCTRL* installation. |
+| **exec&nbsp;[args]** | Calls `build`, `pack`, `sign`, and `deploy`. Arguments are passed to `build`. |
+| **git&nbsp;[args]** | All [*Git*](https://git-scm.com/) commands are executed literally. |
 
 ## Extensions
 
-Custom project-specific commands can be created to extend the functionality of this script. For examples, refer to <https://github.com/automatic-controls/centralizer-for-webctrl/tree/main/ext>. Any batch file placed in *./ext* is treated as an extension. The name of each batch file is used as the command name (case-insensitive). It is expected that each extension prints help information to the terminal when passed the `--help` parameter. Help information is appended to the help menu shown in the terminal.
+Custom project-specific commands can be created to extend the functionality of this script. Any batch file placed in *./ext* is treated as an extension. The name of each batch file is used as the command name (case-insensitive). It is expected that each extension prints help information to the terminal when passed the `--help` parameter. Help information is appended to the help menu shown in the terminal.
 
 The default commands shown in the previous section can be overridden by extensions. For instance, <https://github.com/automatic-controls/commissioning-scripts/blob/main/ext/pack.bat> overrides the default `pack` command. This example also shows how to invoke the overridden packing command (akin to the `super` keyword in Java). For an improved `deploy` command, see <https://github.com/automatic-controls/addon-dev-refresh>.
 
@@ -125,7 +127,7 @@ An optional script, `./startup.bat`, is invoked whenever a project folder is loa
 
 Runtime dependencies are located in *./lib* relative to your local clone of this repository. These dependencies do not need to be packaged into your *.addon* file because they are provided by *WebCTRL* at runtime. Other external dependencies should be placed in *./root/webapp/WEB-INF/lib* relative to your project folder. The following runtime dependencies are collected from your *WebCTRL* installation:
 
-| Dependency | Location Relative to *WebCTRL8.0* |
+| Dependency | Location Relative to *WebCTRL9.0* |
 | - | - |
 | [*tomcat-embed-core*](https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api) | *./webserver/lib* |
 | [*addonsupport-api-addon*](http://repo.alcshare.com/com/controlj/green/addonsupport-api-addon/) | *./modules/addonsupport* |
@@ -167,7 +169,14 @@ The generated 2048-bit RSA key-pair is valid for 100 years, uses SHA512 as the s
 
 ## Compatibility Notes
 
-*WebCTRL* may complain if your add-on name includes spaces. You should use the build flag `--release 11` for *WebCTRL8.0* and `--release 8` for *WebCTRL7.0*. These flags indicate the *JVM* version to use for compilation. You can determine the appropriate *JVM* version by invoking `"[WebCTRL]\bin\java\jre\bin\java.exe" -version` from command prompt (after replacing `[WebCTRL]` with the path to your *WebCTRL* installation directory).
+*WebCTRL* may complain if your add-on name includes spaces. You may use the build flag `--release 11` for *WebCTRL8.0* and `--release 8` for *WebCTRL7.0*. These flags indicate the *JVM* version to use for compilation. You can determine the appropriate *JVM* version by invoking `"[WebCTRL]\bin\java\jre\bin\java.exe" -version` from command prompt (after replacing `[WebCTRL]` with the path to your *WebCTRL* installation directory).
+
+| WebCTRL | JVM |
+| - | - |
+| 7.0 | 8 |
+| 8.0 | 11 |
+| 8.5 | 11 |
+| 9.0 | 17 |
 
 ## Known Issues
 
