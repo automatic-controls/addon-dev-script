@@ -46,7 +46,7 @@ if "%1" EQU "--goto" (
 setlocal EnableDelayedExpansion
 
 :: Version control
-set "version=1.1.5"
+set "version=1.1.6"
 if "%1" EQU "--version" (
   echo %version%
   exit /b
@@ -437,22 +437,17 @@ exit /b
   for /D %%i in ("%trackingClasses%\*") do robocopy /E "%%~fi" "%classes%" >nul 2>nul
   robocopy /E "%src%" "%classes%" /XF "*.java" >nul 2>nul
   copy /Y "%workspace%\LICENSE" "%root%\LICENSE" >nul 2>nul
-  (
-    for /F "usebackq tokens=* delims=" %%i in (`PowerShell -Command "Get-ChildItem -Recurse -File -Exclude '*-sources.jar' -Name -Path '%root%'"`) do (
-      echo -C "%root:\=\\%" %%i
-    )
-    for /F "usebackq tokens=* delims=" %%i in (`PowerShell -Command "Get-ChildItem -Recurse -Directory -Name -Path '%root%'  | ?{(Get-Item "%root%\$_").GetFileSystemInfos().Count -eq 0}"`) do (
-      echo -C "%root:\=\\%" %%i
-    )
-  )>"%~dp0tmp"
-  "%JDKBin%\jar.exe" -c -M -f "%addonFile%" "@%~dp0tmp"
+  robocopy /MIR /MOVE "%lib%" "%workspace%\lib-sources" *-sources.jar >nul 2>nul
+  "%JDKBin%\jar.exe" -c -M -f "%addonFile%" -C "%root%" .
   if %ERRORLEVEL% EQU 0 (
+    robocopy /E /MOVE "%workspace%\lib-sources" "%lib%" >nul 2>nul
+    rmdir /Q /S "%workspace%\lib-sources" >nul 2>nul
     echo Packing successful.
-    del /F "%~dp0tmp" >nul 2>nul
     exit /b 0
   ) else (
+    robocopy /E /MOVE "%workspace%\lib-sources" "%lib%" >nul 2>nul
+    rmdir /Q /S "%workspace%\lib-sources" >nul 2>nul
     echo Packing unsuccessful.
-    del /F "%~dp0tmp" >nul 2>nul
     exit /b 1
   )
 
