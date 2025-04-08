@@ -23,11 +23,11 @@ WebCTRL is a trademark of Automated Logic Corporation.  Any other trademarks men
 
 ## Setup Instructions
 
-1. Install *WebCTRL8.5* or later.
+1. Install *WebCTRL9.0* or later.
 
 2. Install the most recent [*JDK*](https://jdk.java.net/) release.
    - Download the *.zip* file, unpack it, and move the contents to your program files.
-   - Set the `JAVA_HOME` environment variable to the JDK installation directory (e.g, *C:\Program Files\Java\jdk-22.0.1*).
+   - Set the `JAVA_HOME` environment variable to the JDK installation directory (e.g, *C:\Program Files\Java\jdk-24*).
 
 3. Install [*Visual Studio Code*](https://code.visualstudio.com/) and the following extensions:
 
@@ -61,7 +61,7 @@ WebCTRL is a trademark of Automated Logic Corporation.  Any other trademarks men
 
      - You can initialize preexisting project folders. For example, you could clone a remote repository to your local machine, and then initialize it with the script to generate missing files.
 
-6. Review documentation at [*ALCshare*](http://alcshare.com/content/add-ons).
+6. Review API documentation at [*ALCshare*](http://alcshare.com/content/add-ons).
 
 ## Command Reference
 
@@ -132,10 +132,13 @@ Runtime dependencies are located in *./lib* relative to your local clone of this
 | [*tomcat-embed-core*](https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api) | *./webserver/lib* |
 | [*addonsupport-api-addon*](http://repo.alcshare.com/com/controlj/green/addonsupport-api-addon/) | *./modules/addonsupport* |
 | [*alarmmanager-api-addon*](http://repo.alcshare.com/com/controlj/green/alarmmanager-api-addon/) | *./modules/alarmmanager* |
-| [*bacnet-api-addon*](http://repo.alcshare.com/com/controlj/green/bacnet-api-addon/) | *./bin/lib* |
+| [*bacnet-api-core*](http://repo.alcshare.com/com/controlj/green/bacnet-api-addon/) | *./bin/lib* |
 | [*directaccess-api-addon*](http://repo.alcshare.com/com/controlj/green/directaccess-api-addon/) | *./modules/directaccess* |
 | [*webaccess-api-addon*](http://repo.alcshare.com/com/controlj/green/webaccess-api-addon/) | *./modules/webaccess* |
 | [*xdatabase-api-addon*](http://repo.alcshare.com/com/controlj/green/xdatabase-api-addon/) | *./modules/xdatabase* |
+| *datatable-api-addon* | *./modules/datatable* |
+| *logicbuilder-api-addon* | *./modules/logicbuilder* |
+| *semantics-api-addon* | *./modules/semantics* |
 
 Feel free to browse your *WebCTRL* installation for dependencies that give access to other internal APIs if these defaults are insufficient. If you would like to add a *WebCTRL* API to one project folder without affecting any other projects, the *.jar* file should be placed in *./lib* relative to your project folder.
 
@@ -155,8 +158,8 @@ url:commons-compiler:https://repo1.maven.org/maven2/org/codehaus/janino/commons-
 file:spring-context:bin\lib
 file:javax.activation:bin\lib
 file:core-api:modules\core
-url:CommissioningScripts-0.1.1.jar:https://github.com/automatic-controls/commissioning-scripts/releases/download/v0.1.1-beta/CommissioningScripts-0.1.1.jar
-url:CommissioningScripts-0.1.1-sources.jar:https://github.com/automatic-controls/commissioning-scripts/releases/download/v0.1.1-beta/CommissioningScripts-0.1.1-sources.jar
+url:jsch-0.2.24.jar:https://repo1.maven.org/maven2/com/github/mwiede/jsch/0.2.24/jsch-0.2.24.jar
+url:jsch-0.2.24-sources.jar:https://repo1.maven.org/maven2/com/github/mwiede/jsch/0.2.24/jsch-0.2.24-sources.jar
 ```
 
 The general format is `scheme:identifier:location`. For files, the location is a relative path to the folder in your *WebCTRL* installation which contains the dependency. For urls, the location is a direct download link. The identifier should be the first part of the dependency's filename (excluding the version). Dependency filenames are generally expected to match the regular expression `^identifier-\d.*\.jar$`. Alternatively, the identifier may be an exact match to the filename (including the *.jar* extension).
@@ -177,6 +180,7 @@ The generated 2048-bit RSA key-pair is valid for 100 years, uses SHA512 as the s
 | 8.0 | 11 |
 | 8.5 | 11 |
 | 9.0 | 17 |
+| 10.0 | 21 |
 
 ## Known Issues
 

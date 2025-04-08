@@ -5,3 +5,6 @@ file:bacnet-api-core:bin\lib
 file:directaccess-api-addon:modules\directaccess
 file:webaccess-api-addon:modules\webaccess
 file:xdatabase-api-addon:modules\xdatabase
+file:datatable-api-addon:modules\datatable
+file:logicbuilder-api-addon:modules\logicbuilder
+file:semantics-api-addon:modules\semantics

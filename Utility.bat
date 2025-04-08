@@ -46,7 +46,7 @@ if "%1" EQU "--goto" (
 setlocal EnableDelayedExpansion
 
 :: Version control
-set "version=1.1.6"
+set "version=1.1.7"
 if "%1" EQU "--version" (
   echo %version%
   exit /b
@@ -436,7 +436,7 @@ exit /b
   rmdir /Q /S "%classes%" >nul 2>nul
   for /D %%i in ("%trackingClasses%\*") do robocopy /E "%%~fi" "%classes%" >nul 2>nul
   robocopy /E "%src%" "%classes%" /XF "*.java" >nul 2>nul
-  copy /Y "%workspace%\LICENSE" "%root%\LICENSE" >nul 2>nul
+  if exist "%workspace%\LICENSE" copy /Y "%workspace%\LICENSE" "%root%\LICENSE" >nul 2>nul
   robocopy /MIR /MOVE "%lib%" "%workspace%\lib-sources" *-sources.jar >nul 2>nul
   "%JDKBin%\jar.exe" -c -M -f "%addonFile%" -C "%root%" .
   if %ERRORLEVEL% EQU 0 (
@@ -842,7 +842,7 @@ exit /b
   ) > "%workspace%\.gitignore"
 
   :: License
-  if not exist "%workspace%\LICENSE" (
+  if not exist "%workspace%\LICENSE" if "%nolicense%" EQU "" (
     copy /Y "%license%" "%workspace%\LICENSE" >nul
   )
 
