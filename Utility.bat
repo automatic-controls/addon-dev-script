@@ -46,7 +46,7 @@ if "%1" EQU "--goto" (
 setlocal EnableDelayedExpansion
 
 :: Version control
-set "version=1.1.7"
+set "version=1.1.8"
 if "%1" EQU "--version" (
   echo %version%
   exit /b
@@ -135,7 +135,7 @@ if "%WebCTRL%" EQU "" (
 :webctrlFinder
   if "%WebCTRL%" EQU "" (
     echo Could not locate WebCTRL installation.
-    echo Please enter the installation path ^(e.g, %SystemDrive%\WebCTRL9.0^).
+    echo Please enter the installation path ^(e.g, %SystemDrive%\WebCTRL10.0^).
     set /p "WebCTRL=>"
     echo.
     call :saveConfig
@@ -685,20 +685,8 @@ exit /b
   :: Create local launcher within workspace
   setlocal
     set "batch=%workspace%\Utility.bat"
-    set "create=1"
-    if exist "%batch%" (
-      for /f "tokens=* delims=" %%i in ('call "%batch%" --version') do (
-        if "%%i" EQU "%version%" (
-          set "create=0"
-        )
-      )
-    )
-    if "%create%" EQU "1" (
+    if not exist "%batch%" (
       echo @echo off
-      echo if "%%1" EQU "--version" ^(
-      echo   echo %version%
-      echo   exit /b
-      echo ^)
       echo %0 %%~dp0
     ) > "%batch%"
   endlocal

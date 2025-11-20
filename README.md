@@ -31,8 +31,6 @@ WebCTRL is a trademark of Automated Logic Corporation.  Any other trademarks men
 
 3. Install [*Visual Studio Code*](https://code.visualstudio.com/) and the following extensions:
 
-   - [Visual Studio IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode)
-
    - [Project Manager for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-dependency)
 
    - [Lanauge Support for Java(TM) by Red Hat](https://marketplace.visualstudio.com/items?itemName=redhat.java)
@@ -61,8 +59,6 @@ WebCTRL is a trademark of Automated Logic Corporation.  Any other trademarks men
 
      - You can initialize preexisting project folders. For example, you could clone a remote repository to your local machine, and then initialize it with the script to generate missing files.
 
-6. Review API documentation at [*ALCshare*](http://alcshare.com/content/add-ons).
-
 ## Command Reference
 
 The following commands may be used to automate add-on compilation and packaging.
@@ -86,7 +82,7 @@ The following commands may be used to automate add-on compilation and packaging.
 
 Custom project-specific commands can be created to extend the functionality of this script. Any batch file placed in *./ext* is treated as an extension. The name of each batch file is used as the command name (case-insensitive). It is expected that each extension prints help information to the terminal when passed the `--help` parameter. Help information is appended to the help menu shown in the terminal.
 
-The default commands shown in the previous section can be overridden by extensions. For instance, <https://github.com/automatic-controls/commissioning-scripts/blob/main/ext/pack.bat> overrides the default `pack` command. This example also shows how to invoke the overridden packing command (akin to the `super` keyword in Java). For an improved `deploy` command, see <https://github.com/automatic-controls/addon-dev-refresh>.
+The default commands shown in the previous section can be overridden by extensions. For instance, <https://github.com/automatic-controls/commissioning-scripts/blob/main/ext/pack.bat> overrides the default `pack` command. This example also shows how to invoke the overridden packing command. For an improved `deploy` command, see <https://github.com/automatic-controls/addon-dev-refresh>.
 
 An optional script, `./startup.bat`, is invoked whenever a project folder is loaded. This may be used for any additional setup required for project files after cloning a remote repository to your local device.
 
@@ -127,15 +123,15 @@ An optional script, `./startup.bat`, is invoked whenever a project folder is loa
 
 Runtime dependencies are located in *./lib* relative to your local clone of this repository. These dependencies do not need to be packaged into your *.addon* file because they are provided by *WebCTRL* at runtime. Other external dependencies should be placed in *./root/webapp/WEB-INF/lib* relative to your project folder. The following runtime dependencies are collected from your *WebCTRL* installation:
 
-| Dependency | Location Relative to *WebCTRL9.0* |
+| Dependency | Location Relative to *WebCTRL10.0* |
 | - | - |
-| [*tomcat-embed-core*](https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api) | *./webserver/lib* |
-| [*addonsupport-api-addon*](http://repo.alcshare.com/com/controlj/green/addonsupport-api-addon/) | *./modules/addonsupport* |
-| [*alarmmanager-api-addon*](http://repo.alcshare.com/com/controlj/green/alarmmanager-api-addon/) | *./modules/alarmmanager* |
-| [*bacnet-api-core*](http://repo.alcshare.com/com/controlj/green/bacnet-api-addon/) | *./bin/lib* |
-| [*directaccess-api-addon*](http://repo.alcshare.com/com/controlj/green/directaccess-api-addon/) | *./modules/directaccess* |
-| [*webaccess-api-addon*](http://repo.alcshare.com/com/controlj/green/webaccess-api-addon/) | *./modules/webaccess* |
-| [*xdatabase-api-addon*](http://repo.alcshare.com/com/controlj/green/xdatabase-api-addon/) | *./modules/xdatabase* |
+| *tomcat-embed-core* | *./webserver/lib* |
+| *addonsupport-api-addon* | *./modules/addonsupport* |
+| *alarmmanager-api-addon* | *./modules/alarmmanager* |
+| *bacnet-api-core* | *./bin/lib* |
+| *directaccess-api-addon* | *./modules/directaccess* |
+| *webaccess-api-addon* | *./modules/webaccess* |
+| *xdatabase-api-addon* | *./modules/xdatabase* |
 | *datatable-api-addon* | *./modules/datatable* |
 | *logicbuilder-api-addon* | *./modules/logicbuilder* |
 | *semantics-api-addon* | *./modules/semantics* |
