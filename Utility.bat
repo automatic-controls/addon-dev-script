@@ -4,7 +4,7 @@
 
 :: BSD 3-Clause License
 :: 
-:: Copyright (c) 2022, Automatic Controls Equipment Systems, Inc.
+:: Copyright (c) 2022, Automatic Controls Equipment Systems, LLC.
 :: All rights reserved.
 :: 
 :: Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@ if "%1" EQU "--goto" (
 setlocal EnableDelayedExpansion
 
 :: Version control
-set "version=1.1.8"
+set "version=1.1.9"
 if "%1" EQU "--version" (
   echo %version%
   exit /b
@@ -773,7 +773,7 @@ exit /b
   if not exist "%webXML%" (
     echo ^<?xml version="1.0" encoding="UTF-8"?^>
     echo.
-    echo ^<web-app^>
+    echo ^<web-app version="4.0" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"^>
     echo.
     echo   ^<listener^>
     echo     ^<listener-class^>^</listener-class^>

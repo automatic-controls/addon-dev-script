@@ -177,6 +177,7 @@ The generated 2048-bit RSA key-pair is valid for 100 years, uses SHA512 as the s
 | 8.5 | 11 |
 | 9.0 | 17 |
 | 10.0 | 21 |
+| 11.0 | 21 |
 
 ## Known Issues
 
